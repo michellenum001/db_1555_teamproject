@@ -5,7 +5,10 @@ David Neiman
 -GitHub Account = dsn9
 
 Xinyue Huang
-
 -Pitt ID = xih49
 -GitHub Account = michellenum001
+
+Shijia Liu
+-Pitt ID = shl125
+-GitHub Account = shijialiu
 
