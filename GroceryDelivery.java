@@ -67,8 +67,8 @@ public class GroceryDelivery {
             	"year_spend number(10)," +
             	"number_payments number(10)," +
             	"num_deliveries number(10)," +
-            	"primary key(distributor_id, id)," +
-            	"foreign key(distributor_id) references distribution_station(id) deferrable initially deferred)";
+            	"primary key(distributor_id, id) )"; 
+            	//+ "foreign key(distributor_id) references distribution_station(id) deferrable initially deferred)";
             String dropTableOrders = "drop table orders cascade constraints";
             String createTableOrders = "create table orders (" +
             	"custID number(10)," +
@@ -76,8 +76,8 @@ public class GroceryDelivery {
             	"order_date date," +
             	"completed char check(completed in(0,1))," +
             	"num_lineItems number(5)," +
-            	"primary key(custID, id)," +
-            	"foreign key(custID) references customers(id) deferrable initially deferred)";
+            	"primary key(custID, id) )";
+            	//+ "foreign key(custID) references customers(id) deferrable initially deferred)";
             String dropTableLineItems = "drop table LineItems cascade constraints";
             String createTableLineItems = "create table LineItems(" +
             	"order_id number(15)," +
@@ -86,8 +86,8 @@ public class GroceryDelivery {
             	"quantity number(10)," +
             	"price number(10)," +
             	"date_delivered date," +
-            	"primary key(order_id, id)," +
-            	"foreign key(order_id) references orders(id) deferrable initially deferred)";
+            	"primary key(order_id, id) )"; 
+            	//+"foreign key(order_id) references orders(id) deferrable initially deferred)";
             String dropTableItems = "drop table items cascade constraints";
             String createTableItems = "create table items(" +
             	"id number(10)," +
@@ -104,26 +104,51 @@ public class GroceryDelivery {
             	"primary key(warehouse_id, item_id)," +
             	"foreign key(warehouse_id) references warehouses(id) deferrable initially deferred," +
             	"foreign key(item_id) references items(id) deferrable initially deferred)";
+            	
             statement = connection.createStatement();
             System.out.println("connection established successfully.\n");
-            statement.executeUpdate(startTransaction);
+            //statement.executeUpdate(startTransaction);
             System.out.println("transaction started successfully\n");
+            try {
             statement.executeUpdate(dropTableWarehouses);
+            } 
+            catch (Exception e) 
+            {}
             statement.executeUpdate(createTableWarehouses);
             System.out.println("table warehouses created successfully\n");
-            statement.executeUpdate(dropTableDistributionStation);
+            try {
+            	statement.executeUpdate(dropTableDistributionStation);
+            }
+            catch (Exception e)
+            {}
             statement.executeUpdate(createTableDistributionStation);
             System.out.println("table distribution_station created successfully\n");
-            statement.executeUpdate(dropTableCustomers);
+            try {
+            	statement.executeUpdate(dropTableCustomers);
+            } 
+            catch (Exception e)
+            {}
             statement.executeUpdate(createTableCustomers);
             System.out.println("table customers created successfully\n");
-            statement.executeUpdate(dropTableOrders);
+            try {
+            	statement.executeUpdate(dropTableOrders);
+            }
+            catch (Exception e)
+            {}
             statement.executeUpdate(createTableOrders);
             System.out.println("table orders created successfully\n");
-            statement.executeUpdate(dropTableLineItems);
+            try {
+            	statement.executeUpdate(dropTableLineItems);
+            } 
+            catch (Exception e)
+            {}
             statement.executeUpdate(createTableLineItems);
             System.out.println("table lineItems created successfully\n");
-            statement.executeUpdate(dropTableWarehouseStock);
+            try {
+            	statement.executeUpdate(dropTableWarehouseStock);
+            } 
+            catch (Exception e)
+            {}
             statement.executeUpdate(createTableWarehouseStock);
             System.out.println("table warehouse_stock created successfully\n");
             statement.executeUpdate("COMMIT");
