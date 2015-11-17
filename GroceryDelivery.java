@@ -21,8 +21,8 @@ public class GroceryDelivery {
     }
 
     public void populateTables(){
-        String insertWarehouses = "insert into warehouses values(1, 'GrowRoom', '1008 Ross Park Mall Dr'
-            , 'Pittsburgh', 'PA', 15237, 0.07, 1000000)";
+        String insertWarehouses = "insert into warehouses values(1, 'GrowRoom', '1008 Ross Park Mall Dr', 'Pittsburgh', 'PA', 15237, 0.07, 1000000)";
+
 
         String[] distriName = {"distri_one", "distri_two", "distri_three", "distri_four", "distri_five"};
         String[] distriAddress = {"6425 Penn Ave #700", "5000 Forbes Ave", "6001 University Blvd", 
@@ -32,6 +32,70 @@ public class GroceryDelivery {
         String[] distriZip = {"15206", "15213", "15408", "13273", "15678"};
         String[] distriTax = {"0.07", "0.07", "0.07", "0.08", "0.09"};
         String[] distriSales = {"220000", "320000", "445000", "234000", "126000"};
+        
+        int numberDistribution = 5;
+		
+		for (int i = 0; i < numberDistribution; i++)
+		{
+			 String createTableDistributionStation = "create table distribution_station (" + 
+            	"warehouse_id number(10)," +
+            	"id number(10)," +
+            	"name varchar2(20)," +
+            	"address varchar2(40)," +
+            	"city varchar2(15)," +
+            	"state varchar2(15)," +
+            	"zip number(5)," +
+            	"tax_rate number(6,2) check(tax_rate>0)," +
+            	"sales_sum number(15)," +
+		
+			String insertDistribution = "insert into distribution_station values(1, " + (i+1) + ", " + "'" + 
+			distriName[i] + "'" + ", '1008 Ross Park Mall Dr', 'Pittsburgh', 'PA', 15237, 0.07, 1000000)"
+		}
+		
+		int numberCustomer = 100;
+		
+		for (int i = 0; i < numberCustomer; i++)
+		{
+			  String createTableCustomers = "create table customers (" +
+		        "warehouse_id number(10)," +
+            	"distributor_id number(10)," +
+            	"id number(10)," +
+            	"fname varchar2(20)," +
+            	"middle_init varchar2(5)," +
+            	"lname varchar2(20)," +
+            	"address varchar2(40)," +
+            	"city varchar2(40)," +
+            	"state varchar2(15)," +
+            	"zip number(5)," +
+            	"phone varchar2(15)," +
+            	"initial_date date," +
+            	"discount number(8)," +
+            	"outstanding_balance number(10)," +
+            	"year_spend number(10)," +
+            	"number_payments number(10)," +
+            	"num_deliveries number(10)," +
+			
+				int number = numberCustomer/numberWarehouse; //20
+				/*
+					warehouse_id = 1
+					distributor_id = (i/number) + 1
+					id = (i%number) + 1
+					fname = "aaa" + i
+					middle_init = "a" + i
+					lname = "zzz" + i
+					address = i + " St."
+					city = "city" + i
+					state = "state" + i
+					zip = "zip" + i
+					phone = "phone" + i
+					initial_date = 
+					discount = 0
+					outstanding_balance = i
+					year_spend = 100*i
+				*/
+			
+				String insertCustomer = "insert into distribution_station values(1, " + (i+1) + ", " + "'" + 
+		}
 
     }
     
@@ -62,7 +126,7 @@ public class GroceryDelivery {
             	"state varchar2(15)," +
             	"zip number(5)," +
             	"tax_rate number(6,2) check(tax_rate>0)," +
-            	"sales_sum number(15)," +
+            	"sales_sum number(15) default 0," +
             	"primary key (warehouse_id, id)," +
             	"foreign key (warehouse_id) references warehouses(id) deferrable initially deferred)";
             String dropTableCustomers = "drop table customers cascade constraints";
