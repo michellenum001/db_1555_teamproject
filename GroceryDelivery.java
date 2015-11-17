@@ -17,6 +17,22 @@ public class GroceryDelivery {
     public GroceryDelivery()
     {
     	createTables();
+        populateTables();
+    }
+
+    public void populateTables(){
+        String insertWarehouses = "insert into warehouses values(1, 'GrowRoom', '1008 Ross Park Mall Dr'
+            , 'Pittsburgh', 'PA', 15237, 0.07, 1000000)";
+
+        String[] distriName = {"distri_one", "distri_two", "distri_three", "distri_four", "distri_five"};
+        String[] distriAddress = {"6425 Penn Ave #700", "5000 Forbes Ave", "6001 University Blvd", 
+                                "1 Waterfront Pl", "840 Wood St"};
+        String[] distriCity = {"Pittsburgh", "Pittsburgh", "Moon", "Morgantown", "Clarion"};
+        String[] distriState = {"PA", "PA", "PA", "MV", "CA"};
+        String[] distriZip = {"15206", "15213", "15408", "13273", "15678"};
+        String[] distriTax = {"0.07", "0.07", "0.07", "0.08", "0.09"};
+        String[] distriSales = {"220000", "320000", "445000", "234000", "126000"};
+
     }
     
     public void createTables()
@@ -33,7 +49,7 @@ public class GroceryDelivery {
             	"city varchar2(15)," + 
         		"state varchar2(15)," +   
             	"zip number(5)," +  
-            	"tax_rate number(6) check (tax_rate > 0)," +    
+            	"tax_rate number(6,2) check (tax_rate > 0)," +    
             	"sales_sum number(15) default 0," +  
            		"primary key(id) )";
             String dropTableDistributionStation = "drop table distribution_station cascade constraints";
@@ -45,16 +61,15 @@ public class GroceryDelivery {
             	"city varchar2(15)," +
             	"state varchar2(15)," +
             	"zip number(5)," +
-            	"tax_rate number(6) check(tax_rate>0)," +
+            	"tax_rate number(6,2) check(tax_rate>0)," +
             	"sales_sum number(15)," +
             	"primary key (warehouse_id, id)," +
             	"foreign key (warehouse_id) references warehouses(id) deferrable initially deferred)";
             String dropTableCustomers = "drop table customers cascade constraints";
             String createTableCustomers = "create table customers (" +
-		"id number(10)," +
-		"warehouse_id number(10)," +
+		        "warehouse_id number(10)," +
             	"distributor_id number(10)," +
-            	//"id number(10)," +
+            	"id number(10)," +
             	"fname varchar2(20)," +
             	"middle_init varchar2(5)," +
             	"lname varchar2(20)," +
@@ -69,34 +84,38 @@ public class GroceryDelivery {
             	"year_spend number(10)," +
             	"number_payments number(10)," +
             	"num_deliveries number(10)," +
-            	"primary key(id)," +
+            	"primary key(warehouse_id, distributor_id, id)," +
             	"foreign key(warehouse_id, distributor_id) references distribution_station(warehouse_id, id) deferrable initially deferred)";
             String dropTableOrders = "drop table orders cascade constraints";
             String createTableOrders = "create table orders (" +
+                "warehouse_id number(10)," +
+                "distributor_id number(10)," +
             	"custID number(10)," +
             	"id number(15)," +
             	"order_date date," +
             	"completed char check(completed in(0,1))," +
             	"num_lineItems number(5)," +
-            	"primary key(custID, id)," +
-            	"foreign key(custID) references customers(id) deferrable initially deferred)";
+            	"primary key(warehouse_id, distributor_id, custID, id)," +
+            	"foreign key(warehouse_id, distributor_id, custID) references customers(warehouse_id, distributor_id, id) deferrable initially deferred)";
             String dropTableLineItems = "drop table LineItems cascade constraints";
             String createTableLineItems = "create table LineItems(" +
-		"custID number(10)," +
+                "warehouse_id number(10)," +
+                "distributor_id number(10)," +
+		        "custID number(10)," +
             	"order_id number(15)," +
             	"id number(10)," +
             	"item_id number(10)," +
             	"quantity number(10)," +
-            	"price number(10)," +
+            	"price number(10,2)," +
             	"date_delivered date," +
-            	"primary key(custID, order_id, id),"+
-		"foreign key(custID, order_id) references orders(custID, id) deferrable initially deferred," +
+            	"primary key(warehouse_id, distributor_id, custID, order_id, id),"+
+		        "foreign key(warehouse_id, distributor_id, custID, order_id) references orders(warehouse_id, distributor_id, custID, id) deferrable initially deferred," +
             	"foreign key(item_id) references items(id) deferrable initially deferred)";
             String dropTableItems = "drop table items cascade constraints";
             String createTableItems = "create table items(" +
             	"id number(10)," +
             	"name varchar2(20)," +
-            	"price number(10)," +
+            	"price number(10,2)," +
             	"primary key(id))";
             String dropTableWarehouseStock = "drop table warehouse_stock cascade constraints";
             String createTableWarehouseStock = "create table warehouse_stock(" +
