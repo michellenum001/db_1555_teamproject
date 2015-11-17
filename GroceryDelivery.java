@@ -51,8 +51,10 @@ public class GroceryDelivery {
             	"foreign key (warehouse_id) references warehouses(id) deferrable initially deferred)";
             String dropTableCustomers = "drop table customers cascade constraints";
             String createTableCustomers = "create table customers (" +
+		"id number(10)," +
+		"warehouse_id number(10)," +
             	"distributor_id number(10)," +
-            	"id number(10)," +
+            	//"id number(10)," +
             	"fname varchar2(20)," +
             	"middle_init varchar2(5)," +
             	"lname varchar2(20)," +
@@ -67,8 +69,8 @@ public class GroceryDelivery {
             	"year_spend number(10)," +
             	"number_payments number(10)," +
             	"num_deliveries number(10)," +
-            	"primary key(distributor_id, id) )"; 
-            	//+ "foreign key(distributor_id) references distribution_station(id) deferrable initially deferred)";
+            	"primary key(id)," +
+            	"foreign key(warehouse_id, distributor_id) references distribution_station(warehouse_id, id) deferrable initially deferred)";
             String dropTableOrders = "drop table orders cascade constraints";
             String createTableOrders = "create table orders (" +
             	"custID number(10)," +
@@ -76,18 +78,20 @@ public class GroceryDelivery {
             	"order_date date," +
             	"completed char check(completed in(0,1))," +
             	"num_lineItems number(5)," +
-            	"primary key(custID, id) )";
-            	//+ "foreign key(custID) references customers(id) deferrable initially deferred)";
+            	"primary key(custID, id)," +
+            	"foreign key(custID) references customers(id) deferrable initially deferred)";
             String dropTableLineItems = "drop table LineItems cascade constraints";
             String createTableLineItems = "create table LineItems(" +
+		"custID number(10)," +
             	"order_id number(15)," +
             	"id number(10)," +
             	"item_id number(10)," +
             	"quantity number(10)," +
             	"price number(10)," +
             	"date_delivered date," +
-            	"primary key(order_id, id) )"; 
-            	//+"foreign key(order_id) references orders(id) deferrable initially deferred)";
+            	"primary key(custID, order_id, id),"+
+		"foreign key(custID, order_id) references orders(custID, id) deferrable initially deferred," +
+            	"foreign key(item_id) references items(id) deferrable initially deferred)";
             String dropTableItems = "drop table items cascade constraints";
             String createTableItems = "create table items(" +
             	"id number(10)," +
