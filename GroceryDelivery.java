@@ -121,7 +121,7 @@ public class GroceryDelivery {
 			int numberWarehouses = 1;
 			
     		String startTransaction = "SET TRANSACTION READ WRITE";
-        	String insertWarehouses = "insert into warehouses values(1, 'GrowRoom', '1008 Ross Park Mall Dr', 'Pittsburgh', 'PA', '15237', 0.07, 1000000)";
+        	String insertWarehouses = "insert into warehouses values(1, 'GrowRoom', '1008 Ross Park Mall Dr', 'Pittsburgh', 'PA', '15237', 0.07, 0)";
        		statement = connection.createStatement();
        		System.out.println("Connection established successfully.");
        		
@@ -144,7 +144,7 @@ public class GroceryDelivery {
 				String state = "state" + i;
 				String zip = (15000 + i) + "";
 				double tax_rate = r.nextDouble()*40;
-				double sales_sum = r.nextDouble()*10000;
+				double sales_sum = 0;
 				
 				String insertDistribution = "insert into distribution_station values(" + 
 				warehouse_number + ", " + 		
@@ -609,8 +609,12 @@ public class GroceryDelivery {
 	   try blocks */
 
 		String username, password;
-		username = "dsn9"; //This is your username in oracle
-		password = "3766567"; //This is your password in oracle
+		Scanner scan = new Scanner(System.in);
+		System.out.print("Enter your Oracle username: ");
+		
+		username = scan.next(); //This is your username in oracle
+		System.out.print("Enter your Oracle password: ");
+		password = scan.next(); //This is your password in oracle
 	
 		try{
 	   		// Register the oracle driver.  
