@@ -163,7 +163,7 @@ public class GroceryDelivery {
 			}
 			System.out.println("Inserted " + numberDistribution + " tuples into the distribution_station table.");
 				
-		
+			ArrayList <double> itemPrice = new ArrayList <double>;
     		//insert into items        
             for (int i = 0; i < numberItems; i++)
             {
@@ -175,7 +175,7 @@ public class GroceryDelivery {
             	id + ", " +
             	"'" + name + "', " +
             	price + ")";
-            	
+            	itemPrice.add(price);
             	//System.out.println(insertItem);
             	statement.executeUpdate(insertItem);
 				
@@ -350,7 +350,8 @@ public class GroceryDelivery {
             			entered.add(itemID);
             				
             			int quantity = r.nextInt(10)+1;
-            			double price = Math.round(quantity * r.nextDouble()*150*100)/100;
+            			//double price = Math.round(quantity * r.nextDouble()*150*100)/100;
+            			double price = itemPrice.get(itemID - 1);
             			int monthDeliv = r.nextInt(12) + 1;
 						int dayDeliv = r.nextInt(28) + 1;
 						int yearDeliv = r.nextInt(6) + 2010;
@@ -364,7 +365,7 @@ public class GroceryDelivery {
 						lineItemID + ", " +
 						itemID + ", " +
 						quantity + ", " +
-						price + ", " +
+						price + ", " + 
 						date_delivered + ")";
 						//System.out.println(insertLineItem);
 						try {
@@ -376,12 +377,9 @@ public class GroceryDelivery {
 							System.out.println(insertLineItem);
 						}
 						numLineItemsInserted++;
-						
 					}
-				
 				}
 			}
-			
 			//numLineItems
 			System.out.println("Inserted " + numOrdersInserted + " tuples into the orders table.");
 			System.out.println("Inserted " + numLineItemsInserted + " tuples into the lineItems table.");
@@ -425,9 +423,6 @@ public class GroceryDelivery {
                 System.out.println("Cannot close Statement. Machine error: "+e.toString());
             }
         }
-    
-    
-
     }
     
     public void createTables()
