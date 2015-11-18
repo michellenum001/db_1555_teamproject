@@ -1,28 +1,46 @@
 CS1555 Milestone 1
-David Neiman, Xinyue Huang
+David Neiman, Xinyue Huang, Shijia Liu
 
 First, we prompt the user to enter values for the number of distribution centers,
-customers, and items. We also ask for the maximum number of orders that a customer
-can place, and for the maximum number of line items in any single order. We made the
-actual values randomly fall between 1 and the inputted number to make it more realistic
-with some people only ordering once, some ordering many times, some orders only having
-a single or few line items, some potentially with many, etc. We also added some code
-to avoid any exceptions from the user input with some default values, and to avoid
-problems in our code. For example, we had to make sure that the potential number of line
-items in an order was <= the number of items, since you can't use the same set of
-warehouse_id, distributor_id, custID, and itemID twice (would violate PK constraint). 
+customers, and items. The default number of distribution stations, customers, and 
+items are 10, 100, and 25. We also ask for the maximum number of orders that a customer
+can place, the default value is 5. For each order, there would be a maximum number of 
+line items and the default value is 5. We made the actual values randomly fall between 
+1 and the inputted number to make it more realistic with some people only ordering once, 
+some ordering many times, some orders only having a single or few line items, some 
+potentially with many, etc. We also added some code to avoid any exceptions from the 
+user input with some default values, and to avoid problems in our code. For example, 
+we had to make sure that the potential number of line items in an order was <= the 
+number of items, since you can't use the same set of warehouse_id, distributor_id, 
+custID, and itemID twice (would violate PK constraint). 
 
 Beginning our insertion, we first populate the warehouse table with a single hard-coded 
-entry. Then we populate the distribution_station table and the items table. While adding 
-to the customers table, we then calculate the randomly determined number
+entry. 
+
+To populate table distribution_station, we use loop variables to generate different name, 
+address, city, state and zip for each tuple. We then use random number in the appropriate 
+range to generate tax_rate and sales num. 
+
+To populate table items, we use loop variables to generate different id, name and use random
+number to generate different price for each tuple.
+
+To populate table customers, we make the assumption that the customers are equally 
+distributed across distribution centers, with any remainder tacked on the last center.
+Then we use loop variables to generate first name, middle initial, last name, address, city,
+state, zip and phone differently. We then use random number in the appropriate range to 
+represent date, discount, outstanding balance, year_spend, number of payments and number of deliveries.   
+
+While adding to the table orders, we then calculate the randomly determined number
 of orders made by that customer, and add the orders in an inner loop. Using similar logic, 
 inside each iteration of the inserting order loop, we randomly determine the number 
 of line items and loop inside there to add each line item. This way, we are able to get 
 different numbers of orders for the customers, and different number of line items for 
-the orders. Lastly, we populate the warehouse_stock table for warehouse #1 with
+the orders. 
+
+Lastly, we populate the warehouse_stock table for warehouse #1 with
 randomly determined numbers for the quantity in stock, sold, and the number of orders.
 
-In general, we use the number in the loop to differentiate the inputted data, ie. 'city0' 
+In general, we use the loop variables to differentiate the input data, ie. 'city0' 
 and 'city1', which allows us to easily handle different numbers of string inputs every 
 time we run the program. For some of the numerical values like tax_rate and 
 outstanding_balance, we produced random formulas to come up with some unique inputs. 

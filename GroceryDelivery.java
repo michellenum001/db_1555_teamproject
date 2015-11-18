@@ -1,6 +1,6 @@
 //CS 1555 Term Project
 //Fall 2015
-//David Neiman, Xinyue Huang
+//David Neiman, Xinyue Huang, Shijia Liu
 
 import java.sql.*;  //import the file containing definitions for the parts
 import java.text.ParseException;
@@ -74,11 +74,11 @@ public class GroceryDelivery {
     		}
     		catch (Exception e)
     		{
-    			System.out.println("Not a valid entry: Defaulting to 50.");
-    			numberItems = 100;
+    			System.out.println("Not a valid entry: Defaulting to 25.");
+    			numberItems = 25;
     		}
     		
-    		System.out.print("The number of orders in each order is randomly determined individually, with every customer having at least one order. Enter the maximum number possible: ");
+    		System.out.print("The number of orders for each customer is randomly determined individually, with every customer having at least one order. Enter the maximum number possible: ");
     		try {
     			maxOrdersPerCustomer = Integer.parseInt(scan.next());
     			
