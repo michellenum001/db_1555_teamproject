@@ -49,5 +49,9 @@ the entries in the other tables. This was usually done with looping, although fo
 items like itemID (which is determined randomly) in the line_item table, we had to check 
 that we had not used it before with the given warehouse_id, distributor_id, and custID. 
 
+After inserting entries into the table, we calculate the sale sums of both the warehouse 
+and the distribution stations and based on the LineItem table and update the table 
+warehouse and distribution stations.
+
 A major assumption in our approach to generating data is that there is only one
 warehouse right now. 
