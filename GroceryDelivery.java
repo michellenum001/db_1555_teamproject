@@ -229,8 +229,10 @@ public class GroceryDelivery {
                 String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
                 double discount = r.nextDouble()*100;
                 double outstanding_balance = r.nextDouble()*1000;
-                double year_spend = r.nextDouble()*1000 + outstanding_balance;
-                int number_payments = r.nextInt(20);
+                //double year_spend = r.nextDouble()*1000 + outstanding_balance;
+                double year_spend = 0;
+                //int number_payments = r.nextInt(20);
+                int number_payments = 0;
                 int number_deliveries = r.nextInt(20);
                 
                 String insertCustomer = "insert into customers values(" +
@@ -332,11 +334,14 @@ public class GroceryDelivery {
                     //System.out.println(insertOrder);
                     try {
                         statement.executeUpdate(insertOrder);
-                        //String orderQuery = "select number_payments from customers where warehouse_id = "+ warehouse_id + "and distributor_id = "+distributor_id + "and custID = " + custID;
-                        //resultSet = statement.executeQuery(orderQuery);
-                        //int number_pay = resultSet.getInt(1) +1;
-                        //String updateCustomers = "update customers set number_payments = " + number_pay + " where warehouse_id=" + warehouse_id + "and distributor_id = " + distributor_id + "and id =" + custID;
-                        //statement.executeUpdate(updateCustomers);
+                        String orderQuery = "select number_payments from customers where warehouse_id = "+ warehouse_id + " and distributor_id = "+distributor_id + " and id = " + custID;
+                        resultSet = statement.executeQuery(orderQuery);
+                        if(!resultSet.next()){
+                            System.out.println("false");
+                        }
+                        int number_pay = resultSet.getInt(1) +1;
+                        String updateCustomers = "update customers set number_payments = " + number_pay + " where warehouse_id=" + warehouse_id + " and distributor_id = " + distributor_id + " and id =" + custID;
+                        statement.executeUpdate(updateCustomers);
                         
                     }
                     catch (Exception e)
@@ -384,12 +389,15 @@ public class GroceryDelivery {
                         //System.out.println(insertLineItem);
                         try {
                             statement.executeUpdate(insertLineItem);
-                            //String queryCustomers = "select year_spend from customers where warehouse_id = " + warehouse_id + "and distributor_id = " + distributor_id + "and id = "+ custID;
-                            //resultSet = statement.executeQuery(queryCustomers);
-                            //String amount = resultSet.getString(1);
-                            //double newAmount = Double.valueOf(amount) + price;
-                            //String updateCustomers = "update customers set year_spend = " + newAmount + " where warehouse_id = " + warehouse_id + "and distributor_id = " + distributor_id + " and id = "+ custID;
-                            //statement.executeUpdate(updateCustomers);
+                            String queryCustomers = "select year_spend from customers where warehouse_id = " + warehouse_id + " and distributor_id = " + distributor_id + " and id = "+ custID;
+                            resultSet = statement.executeQuery(queryCustomers);
+                            if(!resultSet.next()){
+                                System.out.println("false");
+                            }
+                            String amount = resultSet.getString(1);
+                            double newAmount = Double.valueOf(amount) + price;
+                            String updateCustomers = "update customers set year_spend = " + newAmount + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distributor_id + " and id = "+ custID;
+                            statement.executeUpdate(updateCustomers);
                         }
                         catch (Exception e)
                         {
@@ -497,8 +505,8 @@ public class GroceryDelivery {
             "initial_date date," +
             "discount number(4,2)," +
             "outstanding_balance number(10,2)," +
-            "year_spend number(10,2)," +
-            "number_payments number(10)," +
+            "year_spend number(10,2) default 0," +
+            "number_payments number(10) default 0 ," +
             "num_deliveries number(10)," +
             "primary key(warehouse_id, distributor_id, id)," +
             "foreign key(warehouse_id, distributor_id) references distribution_station(warehouse_id, id) deferrable initially deferred)";
