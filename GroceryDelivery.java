@@ -150,7 +150,7 @@ public class GroceryDelivery {
                 String city = "city" + i%1000;
                 String state = "state" + i%1000;
                 String zip = (15000 + i%1000) + "";
-                double tax_rate = r.nextDouble()*40;
+                double tax_rate = r.nextDouble()*40 + 1;
                 double sales_sum = 0;
                 
                 String insertDistribution = "insert into distribution_station values(" +
