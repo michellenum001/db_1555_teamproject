@@ -50,8 +50,9 @@ items like itemID (which is determined randomly) in the line_item table, we had 
 that we had not used it before with the given warehouse_id, distributor_id, and custID. 
 
 After inserting entries into the table, we calculate the sale sums of both the warehouse 
-and the distribution stations and based on the LineItem table and update the table 
-warehouse and distribution stations.
+and the distribution stations based on the LineItems table and update the table 
+warehouse and distribution stations. We also update the number of payments and year_spend 
+for table customers when inserting one tuple into the table LineItems.
 
 A major assumption in our approach to generating data is that there is only one
 warehouse right now. 
