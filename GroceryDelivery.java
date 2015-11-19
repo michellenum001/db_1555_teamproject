@@ -141,13 +141,15 @@ public class GroceryDelivery {
             //inserting into distribution_station table
             for (int i = 0; i < numberDistribution; i++)
             {
+            	//i%1000 to avoid too long entries and getting an error
+            
                 int warehouse_number = 1;
                 int id = i + 1;
-                String name = "name" + i;
-                String address = "address" + i;
-                String city = "city" + i;
-                String state = "state" + i;
-                String zip = (15000 + i) + "";
+                String name = "name" + i%1000;
+                String address = "address" + i%1000;
+                String city = "city" + i%1000;
+                String state = "state" + i%1000;
+                String zip = (15000 + i%1000) + "";
                 double tax_rate = r.nextDouble()*40;
                 double sales_sum = 0;
                 
@@ -215,14 +217,16 @@ public class GroceryDelivery {
                 }
                 lastID = id;
                 
-                String fname = "aaa" + i;
-                String middle_init = "a" + i;
-                String lname = "zzz" + i;
-                String address = i + " Pittsburgh St.";
-                String city = "city" + i;
-                String state = "state" + i;
-                String zip = (15000 + i) + "";
-                String phone = "phone" + i;
+                // i%1000 to avoid too much storage and errors
+                
+                String fname = "aaa" + i%1000;
+                String middle_init = "a" + i%1000;
+                String lname = "zzz" + i%1000;
+                String address = i%1000 + " Pittsburgh St.";
+                String city = "city" + i%1000;
+                String state = "state" + i%1000;
+                String zip = (15000 + i%1000) + "";
+                String phone = "phone" + i%1000;
                 int month = r.nextInt(12) + 1;
                 int day = r.nextInt(28) + 1;
                 int year = r.nextInt(6) + 2010;
