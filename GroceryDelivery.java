@@ -231,9 +231,9 @@ public class GroceryDelivery {
                 int day = r.nextInt(28) + 1;
                 int year = r.nextInt(6) + 2010;
                 String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
-                double discount = r.nextDouble()*100;
-                double outstanding_balance = r.nextDouble()*1000;
-                double year_spend = r.nextDouble()*1000 + outstanding_balance;
+                double discount = r.nextDouble()*10;
+                double outstanding_balance = r.nextDouble()*100;
+                double year_spend = r.nextDouble()*100 + outstanding_balance;
                 int number_payments = r.nextInt(20);
                 int number_deliveries = r.nextInt(20);
                 
@@ -257,7 +257,9 @@ public class GroceryDelivery {
                 number_deliveries + ")";
                 
                 //System.out.println(insertCustomer);
+                
                 statement.executeUpdate(insertCustomer);
+                
                 
             }
             System.out.println("Inserted " + numberCustomers + " tuples into the customers table.");
