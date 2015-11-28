@@ -16,10 +16,387 @@ public class GroceryDelivery {
     // exists)
     private String query;  //this will hold the query we are using
     
+    public int selectChoice() {
+    	Scanner scan = new Scanner(System.in);
+    	System.out.println("---------------------------------------------------------");
+    	System.out.println("These are the possible operations: ");
+        System.out.println("0: Initialize the Database");
+        System.out.println("1: New Order Transaction");
+        System.out.println("2: Payment Transaction");
+        System.out.println("3: Order Status Transaction");
+        System.out.println("4: Delivery Transaction");
+    	System.out.println("5: Stock Level Transaction");
+    	System.out.println("6: Exit");
+    	System.out.print("\nEnter the number corresponding to the desired operation: ");
+    	int choice = -1;
+    	while (choice < 0 || choice > 6) {
+    		try {
+    			choice = Integer.parseInt(scan.next());
+    			if (choice < 0 || choice >6) {
+    				System.out.print("Invalid input. Please try again: ");
+    			}
+    		}
+    		catch (Exception e) {
+    			System.out.print("Invalid input. Please try again: ");
+    		}
+    	}
+    	return choice;
+    }
+    
     public GroceryDelivery()
     {
-        createTables();
-        populateTables();
+    	int choice = -1;
+    	System.out.println();
+    
+    	while (choice < 0 || choice != 6) {
+    		choice = selectChoice();
+    		
+    		if (choice == 0) {
+        		createTables();
+       			populateTables();
+       		}
+       	
+       		if (choice == 2) {
+       			paymentTransaction();
+       		}
+       	
+       		if (choice == 3) {
+       			orderStatusTransaction();
+       		}
+       		
+       		if (choice == 4) {
+       			deliveryTransaction();
+       		}
+       		
+    	}	
+    }
+    
+    public void deliveryTransaction() {
+    	int distribution_station = -1;
+    	int warehouse_id = -1;
+    	Scanner scan = new Scanner(System.in);
+    	
+    	try {
+    		System.out.println("\nThe following info will be used to determine the distribution station: ");
+    		
+        	System.out.print("Enter the warehouse ID: ");
+        	
+        	while (warehouse_id < 0) {
+        		try {
+        			warehouse_id = Integer.parseInt(scan.next());
+        			
+        			if (warehouse_id < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+    		
+    		System.out.print("Enter the distribution station: ");
+    		
+        
+        	while (distribution_station < 0) {
+        		try {
+        			distribution_station = Integer.parseInt(scan.next());
+        			
+        			if (distribution_station < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	String startTransaction = "SET TRANSACTION READ WRITE";
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            
+            String findLineItems = "Select custID, order_id from lineItems where warehouse_id = " + 
+            warehouse_id + " and distributor_id = " + distribution_station + 
+            " date_delivered is NULL";
+            
+            resultSet = statement.executeQuery(findLineItems);
+	
+	    	while (resultSet.next()) {	
+	    		int custID = resultSet.getInt(1);
+	    		int orderID = resultSet.getInt(2);
+	    		System.out.println("Record found for this order: " + orderID);
+	    	}
+	    	
+            statement.executeUpdate("COMMIT");
+            System.out.println("Transaction committed.\n");
+        
+        } catch(SQLException Ex) {
+            System.out.println("Error running the sample queries.  Machine Error: " +
+                    Ex.toString());
+        } finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
+        }
+    }
+    
+    public void orderStatusTransaction() {
+    	
+    	int distribution_station = -1;
+    	int custID = -1;
+    	int warehouse_id = -1;
+    	int order_id = -1;
+    	Scanner scan = new Scanner(System.in);
+    	
+    	try {
+    		System.out.println("\nThe following info will be used to determine the unique customer: ");
+    		
+        	System.out.print("Enter the warehouse ID: ");
+        	
+        	while (warehouse_id < 0) {
+        		try {
+        			warehouse_id = Integer.parseInt(scan.next());
+        			
+        			if (warehouse_id < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+    		
+    		System.out.print("Enter the distribution station: ");
+    		
+        
+        	while (distribution_station < 0) {
+        		try {
+        			distribution_station = Integer.parseInt(scan.next());
+        			
+        			if (distribution_station < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	System.out.print("Enter the customer ID for the distribution station: ");
+        	
+        	while (custID < 0) {
+        		try {
+        			custID = Integer.parseInt(scan.next());
+        			
+        			if (custID < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	
+        	String startTransaction = "SET TRANSACTION READ WRITE";
+            
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            System.out.println("Transaction started successfully.\n");
+            
+            String checkOrder = "Select id from orders where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and custID = " + custID + 
+            " and order_date = (select max(order_date) from orders where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and custID = " + custID + ") and rownum = 1";
+            
+	    	resultSet = statement.executeQuery(checkOrder);
+	    	int orderID = -1;
+	
+	    	if (resultSet.next()) {	
+	    		orderID = resultSet.getInt(1);
+	    		System.out.println("Record found for this order: " + orderID);
+	    	}
+	    	else {
+	    		System.out.println("No record for this customer.");
+	    		return;
+	    	}
+	    	
+	    	String lineInfo = "Select item_id, quantity, price, date_delivered from lineItems " +
+	    	"where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and custID = " + custID + 
+            " and order_id = " + orderID;
+            resultSet = statement.executeQuery(lineInfo);
+            
+           	int cnt = 1;
+            while (resultSet.next()) {
+            	 System.out.println("Line Item #" + cnt + "\n-----------------------------");
+                 System.out.println("Item_id: " + resultSet.getInt(1));
+                 System.out.println("Quantity of item: " + resultSet.getInt(2));
+                 System.out.println("Amount due: " + resultSet.getDouble(3));
+                 if (resultSet.getDate(4) != null) {
+                	 System.out.println("Date delivered: " + resultSet.getDate(4).toString());
+                }
+                else {
+                	 System.out.println("Not delivered yet.");
+                }
+                System.out.println();
+                cnt++;
+            }
+	    	
+            statement.executeUpdate("COMMIT");
+            System.out.println("Transaction committed.\n");
+        
+        } catch(SQLException Ex) {
+            System.out.println("Error running the sample queries.  Machine Error: " +
+                    Ex.toString());
+        } finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
+        }
+    }
+    
+    public void paymentTransaction() {
+    	
+    	int distribution_station = -1;
+    	int custID = -1;
+    	int warehouse_id = -1;
+    	Scanner scan = new Scanner(System.in);
+    	
+    	try {
+    		System.out.println("\nThe following info will be used to determine the unique customer: ");
+    		
+        	System.out.print("Enter the warehouse ID: ");
+        	
+        	while (warehouse_id < 0) {
+        		try {
+        			warehouse_id = Integer.parseInt(scan.next());
+        			
+        			if (warehouse_id < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+    		
+    		System.out.print("Enter the distribution station: ");
+    		
+        
+        	while (distribution_station < 0) {
+        		try {
+        			distribution_station = Integer.parseInt(scan.next());
+        			
+        			if (distribution_station < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	System.out.print("Enter the customer ID for the distribution station: ");
+        	
+        	while (custID < 0) {
+        		try {
+        			custID = Integer.parseInt(scan.next());
+        			
+        			if (custID < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	
+        	String startTransaction = "SET TRANSACTION READ WRITE";
+            
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            System.out.println("Transaction started successfully.\n");
+            
+            String checkCustomer = "Select outstanding_balance from customers where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and id = " + custID;
+            
+           
+	    	resultSet = statement.executeQuery(checkCustomer);
+	    	double outstanding_balance = 0;
+	
+	    	if (resultSet.next()) {	
+	    		outstanding_balance = resultSet.getDouble(1);
+	    		System.out.println("Record found for this customer: " + outstanding_balance);
+	    	}
+	    	else {
+	    		System.out.println("No record for this customer.");
+	    		return;
+	    	}
+	    	
+	    	double paymentAmt = -1;
+	    	
+	    	System.out.print("Enter the amount of the payment: ");
+        	
+        	while (paymentAmt < 0) {
+        		try {
+        			paymentAmt = Double.parseDouble(scan.next());
+        			
+        			if (paymentAmt < 0) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	String updateCustomer = "Update customers set outstanding_balance = " + 
+        	(outstanding_balance - paymentAmt) + "where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and id = " + custID;
+            
+            statement.executeQuery(updateCustomer);
+            System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
+            
+            String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " + 
+        	paymentAmt + "where warehouse_id = 1 and " +
+            "id = " + distribution_station;
+            
+            statement.executeQuery(updateDistribution);
+            System.out.println("Added " + paymentAmt + " towards the sales sum of distribution center #" + distribution_station + ".");
+            
+            String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " + 
+        	paymentAmt + "where id = 1";
+            
+            statement.executeQuery(updateWarehouse);
+            System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");
+            
+            statement.executeUpdate("COMMIT");
+            System.out.println("Transaction committed.\n");
+        
+        } catch(SQLException Ex) {
+            System.out.println("Error running the sample queries.  Machine Error: " +
+                    Ex.toString());
+        } finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
+        }
     }
     
     public void populateTables(){
@@ -93,6 +470,7 @@ public class GroceryDelivery {
                 System.out.println("Not a valid entry: Defaulting to 5.");
                 maxOrdersPerCustomer = 5;
             }
+            
             
             System.out.print("The number of line items in each order is randomly determined individually, with every order having at least one line item. Enter the maximum number possible: ");
             try {
@@ -232,7 +610,7 @@ public class GroceryDelivery {
                 int year = r.nextInt(6) + 2010;
                 String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
 
-                double discount = r.nextDouble()*100;
+                double discount = r.nextDouble()*10;
                 double outstanding_balance = r.nextDouble()*1000;
                 //double year_spend = r.nextDouble()*1000 + outstanding_balance;
                 double year_spend = 0;
@@ -254,15 +632,22 @@ public class GroceryDelivery {
                 "'" + zip + "', " +
                 "'" + phone + "', " +
                 initial_date + ", " +
-                discount + ", " +
-                outstanding_balance + ", " +
+                Math.round(discount*100)/100 + ", " +
+                Math.round(outstanding_balance*100)/100 + ", " +
                 year_spend + ", " +
                 number_payments + ", " +
                 number_deliveries + ")";
                 
                 //System.out.println(insertCustomer);
                 
-                statement.executeUpdate(insertCustomer);
+                try {
+                	statement.executeUpdate(insertCustomer);
+                }
+                catch (Exception e) {
+                	System.out.println(insertCustomer);
+                	statement.executeUpdate(insertCustomer);
+                	System.exit(0);
+                }
                 
                 
             }
@@ -511,7 +896,7 @@ public class GroceryDelivery {
             "zip varchar2(10)," +
             "phone varchar2(15)," +
             "initial_date date," +
-            "discount number(4,2)," +
+            "discount number(6,2)," +
             "outstanding_balance number(10,2)," +
             "year_spend number(10,2) default 0," +
             "number_payments number(10) default 0 ," +
@@ -643,6 +1028,8 @@ public class GroceryDelivery {
          these, you either put the DB stuff in a try block or have your function
          throw the Exceptions and handle them later.  For this demo I will use the
          try blocks */
+         
+
         
         String username, password;
         Scanner scan = new Scanner(System.in);
@@ -651,6 +1038,8 @@ public class GroceryDelivery {
         username = scan.next(); //This is your username in oracle
         System.out.print("Enter your Oracle password: ");
         password = scan.next(); //This is your password in oracle
+        
+       
         
         try{
             // Register the oracle driver.  
@@ -661,7 +1050,8 @@ public class GroceryDelivery {
             String url = "jdbc:oracle:thin:@class3.cs.pitt.edu:1521:dbclass"; 
             
             //create a connection to DB on class3.cs.pitt.edu
-            connection = DriverManager.getConnection(url, username, password);     
+            connection = DriverManager.getConnection(url, username, password);    
+            connection.setAutoCommit(false); 
             GroceryDelivery test = new GroceryDelivery();
         }	
         catch(SQLException Ex)  {
