@@ -114,17 +114,47 @@ public class GroceryDelivery {
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
             
-            String findLineItems = "Select custID, order_id from lineItems where warehouse_id = " + 
+            String findLineItems = "Select custID, order_id, price from lineItems where warehouse_id = " + 
             warehouse_id + " and distributor_id = " + distribution_station + 
-            " date_delivered is NULL";
+            " and date_delivered is NULL";
+            System.out.println(findLineItems);
             
             resultSet = statement.executeQuery(findLineItems);
 	
-	    	while (resultSet.next()) {	
+			//right now this only iterates once for some reason
+	    	while (resultSet.next()){
+	    		
 	    		int custID = resultSet.getInt(1);
 	    		int orderID = resultSet.getInt(2);
-	    		System.out.println("Record found for this order: " + orderID);
+	    		double price = resultSet.getDouble(3);
+	    		System.out.println("Record found for this order: " + custID + ", " + orderID + ", " + price);
+	    		
+	    		String updateCompleted = "update orders set completed = 1" + 
+	    		 " where warehouse_id = " + warehouse_id + " and " +
+            	"distributor_id = " + distribution_station + " and custid = " + custID +
+            	" and id = " + orderID;
+	    		statement.executeUpdate(updateCompleted);
+	    		System.out.println("Marked the order as completed.");
+	    		
+	    		String updateBalance = "update customers set outstanding_balance = outstanding_balance + " 
+	    		+ price + " where warehouse_id = " + warehouse_id + " and " +
+            	"distributor_id = " + distribution_station + " and id = " + custID;
+	    		statement.executeUpdate(updateBalance);
+	    		System.out.println("Increased the outstanding balance by " + price);
+	    		
+	    		String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " 
+	    		+ "1 where warehouse_id = " + warehouse_id + " and " +
+            	"distributor_id = " + distribution_station + " and id = " + custID;
+	    		statement.executeUpdate(updateNumDeliveries);
+	    		System.out.println("Increased the number of deliveries by one.");
 	    	}
+	    	
+	    	String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
+	    	String setDelivered = "update lineItems set date_delivered = " + date + 
+	    	" where warehouse_id = " + warehouse_id + " and distributor_id = " + 
+	    	distribution_station;
+	    	statement.executeQuery(setDelivered);
+	    	System.out.println("Set the deliveries to not NULL.");
 	    	
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
@@ -764,7 +794,8 @@ public class GroceryDelivery {
                         int monthDeliv = r.nextInt(12) + 1;
                         int dayDeliv = r.nextInt(28) + 1;
                         int yearDeliv = r.nextInt(6) + 2010;
-                        String date_delivered = "TO_DATE('" + monthDeliv + "-" + dayDeliv + "-" + yearDeliv + "', 'MM-DD-YYYY')";
+                        //String date_delivered = "TO_DATE('" + monthDeliv + "-" + dayDeliv + "-" + yearDeliv + "', 'MM-DD-YYYY')";
+                        String date_delivered = "NULL";
                         double curVal = distributorSale.get(Integer.valueOf(distributor_id)-1);
                         distributorSale.set(Integer.valueOf(distributor_id)-1,curVal+price);
                         
