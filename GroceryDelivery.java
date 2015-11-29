@@ -201,7 +201,7 @@ public class GroceryDelivery {
         			try {
         					itemID = Integer.parseInt(scan.next());
         			
-        					if (itemID < 1) {
+        					if (itemID < 1 || itemID > maxItemID) {
         						System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
         					}
         					
