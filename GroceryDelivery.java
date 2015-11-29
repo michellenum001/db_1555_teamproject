@@ -91,7 +91,7 @@ public class GroceryDelivery {
     	
     	try {
     		System.out.println("\nThe following info will be used to determine the " + 
-    		"distribution station and integer stock threshold: ");
+    		"unique customer: ");
     		
         	System.out.print("Enter the warehouse ID: ");
         	
@@ -138,12 +138,160 @@ public class GroceryDelivery {
         		}
         	}
         	
-        	//left off here
-        	
         	String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
             
+        	
+        	int maxItemID, orderID;
+        	//Get max # of items, so we know what number range to offer to the user.
+        	resultSet = statement.executeQuery("Select max(id) from items");
+        	if (resultSet.next()) {
+        		maxItemID = resultSet.getInt(1);
+        		System.out.println("The database contains " + maxItemID + " unique items.");
+        	}
+        	else {
+        		System.out.println("There are no items in the database.");
+        		return;
+        	}
+        	
+        	//Storing the itemPrices in an array
+        	double [] itemPrices = new double [maxItemID + 1];
+        	resultSet = statement.executeQuery("Select id, price from items");
+        	while (resultSet.next()) {
+        		int id = resultSet.getInt(1);
+        		double price = resultSet.getDouble(2);
+        		itemPrices[id] = price;
+        	}
+        	
+        	//Get max order # from the user, so we can start at the next number for the
+        	//next order
+        	String userLastOrder = "Select max(id) from orders where warehouse_id = " +
+        	warehouse_id + " and distributor_id = " + distribution_station + 
+        	" and custID = " + custID;
+        	resultSet = statement.executeQuery(userLastOrder);
+        	
+        	if (resultSet.next()) {
+        		orderID = resultSet.getInt(1)+1;
+        		System.out.println("Last order for this customer was #" + (orderID-1) + ", so we now have order #" + orderID);
+        	}
+        	else {
+        		System.out.println("This customer is not found in the database.");
+        		return;
+        	}
+        	
+        	//total number of line items, to be stored in the orders table
+        	int numLineItems = 0;
+        	int itemID = -1;
+        	int quantity = -1;
+        	String continueLineItems = "YES";
+        	
+        	//if opt to not have a duplicate line item below, use this to avoid the line item transaction
+        	boolean duplicateItemNo = false;
+        	
+        	//Use this to track which item IDs user has ordered.
+        	
+        	ArrayList <Integer> usedItems = new ArrayList <Integer> ();
+        	
+        	//Allow user to keep entering items.
+        	while (continueLineItems.equals("YES") && usedItems.size() != maxItemID) {
+        	
+        		while (itemID < 1) {
+        			System.out.print("\nEnter the item ID for the line item order (between 1 and " + maxItemID + "): ");
+        			try {
+        					itemID = Integer.parseInt(scan.next());
+        			
+        					if (itemID < 1) {
+        						System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
+        					}
+        					
+        					//Already made a line item for this order
+        					if (usedItems.contains(itemID)) {
+        						System.out.println("You have already ordered this item.");
+        						
+        						String flag = "";
+        						while (!flag.equals("YES") && !flag.equals("NO")) {
+        							System.out.print("Are you sure you want to place another line item order for this item? Please enter 'yes' or 'no'. ");
+        							String input = scan.next();
+        							if (input.toUpperCase().equals("YES")) {
+        								flag = "YES";
+        							}
+        							else if (input.toUpperCase().equals("NO")) {
+        								flag = "NO";
+        								itemID = 1; //placeholder to avoid loop
+        								quantity = 1; //placeholder to avoid loop
+        								duplicateItemNo = true;
+        							}
+        						}
+        					}
+        				}
+        			catch (Exception e) {
+        				System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
+        			}
+        		}
+        		
+        		usedItems.add(itemID);
+        		
+        		if (!duplicateItemNo)
+        			System.out.print("Enter the quantity of this item: ");
+        		while (quantity < 1) {
+        			try {
+        					quantity = Integer.parseInt(scan.next());
+        			
+        					if (quantity < 1) {
+        						System.out.print("\nInvalid input. Please enter the quantity of this item: ");
+        					}
+        				}
+        			catch (Exception e) {
+        				System.out.print("\nInvalid input. Please enter the quantity of this item: ");
+        			}
+        		}
+        		
+        		double totalPrice = itemPrices[itemID] * quantity;
+        		
+        		if (!duplicateItemNo)
+        			numLineItems++;
+        		
+        		String insertLineItem = "insert into lineItems (warehouse_id, distributor_id, " + 
+        		"custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
+        		warehouse_id + ", " + distribution_station + ", " + custID + ", " + orderID + ", " +
+        		numLineItems + ", " + itemID + ", " + quantity + ", " + totalPrice + ", NULL)";
+
+        		//System.out.println(insertLineItem);
+        		if (!duplicateItemNo) 
+        			statement.executeUpdate(insertLineItem);
+        			
+        		duplicateItemNo = false; // can reset it here
+        		
+        		//this is the boolean that determines if we continue the loop
+        		continueLineItems = null;
+        		
+        		while (continueLineItems == null) {
+        			System.out.print("\nDo you want to enter another line item in this order? Please enter 'yes' or 'no'. ");
+        			String input = scan.next();
+        			if (input.toUpperCase().equals("YES")) {
+        				continueLineItems = "YES";
+        				
+        				//reset
+        				itemID = -1;
+        				quantity = -1;
+        			}
+        			else if (input.toUpperCase().equals("NO")) {
+        				continueLineItems = "NO";
+        			}
+        		}
+        	}
+        	
+        
+        	String currentDate = "TO_DATE('10-15-2015', 'MM-DD-YYYY')";
+        	
+        	String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
+        	"id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " + 
+        	distribution_station + ", " + custID + ", " + orderID + ", " + 
+        	currentDate + ", 0, " + numLineItems + ")";
+        	System.out.println(insertOrder);
+        	statement.executeUpdate(insertOrder);
+        	//left off here
            
 	    	
             statement.executeUpdate("COMMIT");
@@ -1324,7 +1472,7 @@ public class GroceryDelivery {
         
         String username, password;
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter your Oracle username: ");
+        System.out.print("\nEnter your Oracle username: ");
         
         username = scan.next(); //This is your username in oracle
         System.out.print("Enter your Oracle password: ");
