@@ -117,44 +117,59 @@ public class GroceryDelivery {
             String findLineItems = "Select custID, order_id, price from lineItems where warehouse_id = " + 
             warehouse_id + " and distributor_id = " + distribution_station + 
             " and date_delivered is NULL";
-            System.out.println(findLineItems);
             
             resultSet = statement.executeQuery(findLineItems);
+            
+            //Can only have one resultSet with a statement, so we make a second here to 
+            //avoid overwriting the resultSet of the findLineItems query.
+            
+            Statement statement2 = connection.createStatement();
+            int cntRows = 0;
 	
 			//right now this only iterates once for some reason
 	    	while (resultSet.next()){
-	    		
+	    		cntRows++;
 	    		int custID = resultSet.getInt(1);
 	    		int orderID = resultSet.getInt(2);
 	    		double price = resultSet.getDouble(3);
-	    		System.out.println("Record found for this order: " + custID + ", " + orderID + ", " + price);
+	    		System.out.println("\nRecord found for this order: " + custID + ", " + orderID + ", " + price);
 	    		
 	    		String updateCompleted = "update orders set completed = 1" + 
 	    		 " where warehouse_id = " + warehouse_id + " and " +
             	"distributor_id = " + distribution_station + " and custid = " + custID +
             	" and id = " + orderID;
-	    		statement.executeUpdate(updateCompleted);
+	    		statement2.executeUpdate(updateCompleted);
 	    		System.out.println("Marked the order as completed.");
 	    		
 	    		String updateBalance = "update customers set outstanding_balance = outstanding_balance + " 
 	    		+ price + " where warehouse_id = " + warehouse_id + " and " +
             	"distributor_id = " + distribution_station + " and id = " + custID;
-	    		statement.executeUpdate(updateBalance);
+	    		statement2.executeUpdate(updateBalance);
 	    		System.out.println("Increased the outstanding balance by " + price);
 	    		
 	    		String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " 
 	    		+ "1 where warehouse_id = " + warehouse_id + " and " +
             	"distributor_id = " + distribution_station + " and id = " + custID;
-	    		statement.executeUpdate(updateNumDeliveries);
+	    		statement2.executeUpdate(updateNumDeliveries);
 	    		System.out.println("Increased the number of deliveries by one.");
+	    		
+	    		
 	    	}
 	    	
-	    	String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
-	    	String setDelivered = "update lineItems set date_delivered = " + date + 
-	    	" where warehouse_id = " + warehouse_id + " and distributor_id = " + 
-	    	distribution_station;
-	    	statement.executeQuery(setDelivered);
-	    	System.out.println("Set the deliveries to not NULL.");
+	    	statement2.close(); // no longer need this one
+	    	
+	    	if (cntRows > 0) {
+	    		String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
+	    		String setDelivered = "update lineItems set date_delivered = " + date + 
+	    		" where warehouse_id = " + warehouse_id + " and distributor_id = " + 
+	    		distribution_station;
+	    		statement.executeQuery(setDelivered);
+	    		System.out.println("\nSet the deliveries to not NULL.");
+	    	}
+	    	else {
+	    		System.out.println("\nAll order line items for the given distribution station " + 
+	    		" are already delivered.");
+	    	}
 	    	
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
