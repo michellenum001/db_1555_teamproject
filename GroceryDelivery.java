@@ -12,12 +12,14 @@ public class GroceryDelivery {
     private static Connection connection; //used to hold the jdbc connection to the DB
     private Statement statement; //used to create an instance of the connection
     private PreparedStatement preparedStatement; //used to create a prepared statement, that will be later reused
-    private ResultSet resultSet; //used to hold the result of your query (if one
+    private ResultSet resultSet, resultSet2; //used to hold the result of your query (if one
     // exists)
     private String query;  //this will hold the query we are using
     
     public int selectChoice() {
+    
     	Scanner scan = new Scanner(System.in);
+    	
     	System.out.println("---------------------------------------------------------");
     	System.out.println("These are the possible operations: ");
         System.out.println("0: Initialize the Database");
@@ -28,7 +30,9 @@ public class GroceryDelivery {
     	System.out.println("5: Stock Level Transaction");
     	System.out.println("6: Exit");
     	System.out.print("\nEnter the number corresponding to the desired operation: ");
+    	
     	int choice = -1;
+    	
     	while (choice < 0 || choice > 6) {
     		try {
     			choice = Integer.parseInt(scan.next());
@@ -56,6 +60,10 @@ public class GroceryDelivery {
        			populateTables();
        		}
        	
+       		if (choice == 1) {
+       			newOrderTransaction();
+       		}
+       	
        		if (choice == 2) {
        			paymentTransaction();
        		}
@@ -68,7 +76,244 @@ public class GroceryDelivery {
        			deliveryTransaction();
        		}
        		
+       		if (choice == 5) {
+       			stockLevelTransaction();
+       		}
+       		
     	}	
+    }
+    
+    public void newOrderTransaction() {
+    	int distribution_station = -1;
+    	int warehouse_id = -1;
+    	int custID = -1;
+    	Scanner scan = new Scanner(System.in);
+    	
+    	try {
+    		System.out.println("\nThe following info will be used to determine the " + 
+    		"distribution station and integer stock threshold: ");
+    		
+        	System.out.print("Enter the warehouse ID: ");
+        	
+        	while (warehouse_id < 1) {
+        		try {
+        			warehouse_id = Integer.parseInt(scan.next());
+        			
+        			if (warehouse_id < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+    		
+    		System.out.print("Enter the distribution station: ");
+    		
+        
+        	while (distribution_station < 1) {
+        		try {
+        			distribution_station = Integer.parseInt(scan.next());
+        			
+        			if (distribution_station < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	System.out.print("Enter the customer ID: ");
+        	while (custID < 1) {
+        		try {
+        			custID = Integer.parseInt(scan.next());
+        			
+        			if (custID < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	//left off here
+        	
+        	String startTransaction = "SET TRANSACTION READ WRITE";
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            
+           
+	    	
+            statement.executeUpdate("COMMIT");
+            System.out.println("\nTransaction committed.\n");
+        
+        } catch(SQLException Ex) {
+            System.out.println("Error running the sample queries.  Machine Error: " +
+                    Ex.toString());
+        } finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
+        }
+    }
+    
+    public void stockLevelTransaction() {
+    	int distribution_station = -1;
+    	int warehouse_id = -1;
+    	int stock_threshold = -1;
+    	Scanner scan = new Scanner(System.in);
+    	
+    	try {
+    		System.out.println("\nThe following info will be used to determine the " + 
+    		"distribution station and integer stock threshold: ");
+    		
+        	System.out.print("Enter the warehouse ID: ");
+        	
+        	while (warehouse_id < 1) {
+        		try {
+        			warehouse_id = Integer.parseInt(scan.next());
+        			
+        			if (warehouse_id < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+    		
+    		System.out.print("Enter the distribution station: ");
+    		
+        
+        	while (distribution_station < 1) {
+        		try {
+        			distribution_station = Integer.parseInt(scan.next());
+        			
+        			if (distribution_station < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	System.out.print("Enter the stock threshold: ");
+        	while (stock_threshold < 1) {
+        		try {
+        			stock_threshold = Integer.parseInt(scan.next());
+        			
+        			if (stock_threshold < 1) {
+        				System.out.print("Invalid input. Please try again: ");
+        			}
+        		}
+        		catch (Exception e) {
+        			System.out.print("Invalid input. Please try again: ");
+        		}
+        	}
+        	
+        	String startTransaction = "SET TRANSACTION READ WRITE";
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            
+            //The 20 most recent orders for the distribution station
+            String lastTwentyOrders = "Select * from (Select order_date, custID, id from orders where warehouse_id = " + 
+        	warehouse_id + " and distributor_id = " + distribution_station + 
+        	" order by order_date desc) sortedDate where rownum < 21";
+        	
+        	//This will initially hold all the items in the line items for the given orders.
+        	//Later it will be reduced to only the items that have a stock under the threshold.
+        	//I am using a TreeSet since it won't store duplicate itemIDs among the line items.
+        	
+        	TreeSet <Integer> items = new TreeSet <Integer> ();
+        	
+        	resultSet = statement.executeQuery(lastTwentyOrders);
+            
+            //Can only have one resultSet with a statement, so we make a second here to 
+            //avoid overwriting the resultSet of the findLineItems query.
+            
+            Statement statement2 = connection.createStatement();
+            int orderCount = 1;
+            
+            while (resultSet.next()) {
+            	String date = resultSet.getDate(1).toString();
+            	int custID = resultSet.getInt(2);
+            	int orderID = resultSet.getInt(3);
+            	
+            	String lineItems = "Select item_id, quantity from lineItems where " +
+            	"warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_station + 
+            	" and custID = " + custID + " and order_id = " + orderID;
+            	resultSet2 = statement2.executeQuery(lineItems);
+            	int lineItemCount = 1;
+            	while (resultSet2.next()) {
+            		int itemID = resultSet2.getInt(1);
+            		int quantity = resultSet2.getInt(2);
+            		items.add(itemID);
+            		/*
+            		System.out.println("\nLine item #" + lineItemCount + " of order #" + orderCount + " by date, date of " + date + ":\n----------------------------------");
+            		System.out.println("itemID: " + itemID);
+            		System.out.println("Quantity: " + quantity);
+            		*/
+            		lineItemCount++;
+            	}
+            	orderCount++;
+            }
+            statement2.close();
+            System.out.println();
+            
+            int cntResult = 0;
+            
+            String warehouseStock = "Select item_id, quantity_in_stock from warehouse_stock where " + 
+            	"warehouse_id = " + warehouse_id + " and quantity_in_stock < " + stock_threshold;
+            resultSet = statement.executeQuery(warehouseStock);
+            
+            ArrayList <Integer> itemsQualifying = new ArrayList <Integer> ();
+            	
+            while (resultSet.next()) {
+          
+            	int itemID = resultSet.getInt(1);
+            	int quantity = resultSet.getInt(2);
+            	/*
+            	System.out.println("\nItemID: " + itemID); 
+            	System.out.println("Quantity: " + quantity);
+            	System.out.println("Below threshold: " + (quantity < stock_threshold));
+            	*/
+            	
+            	//See if the item was in a relevant line item order.
+            	if (items.contains(itemID)) {
+            		cntResult++;
+            		items.remove(itemID);
+            		itemsQualifying.add(itemID);
+            	}
+            }
+            
+            System.out.println("There are a total of " + cntResult + " items that have a "
+            + "stock under the threshold in the distribution station's warehouse.");
+            System.out.println("They are: " + itemsQualifying);
+	    	
+            statement.executeUpdate("COMMIT");
+            System.out.println("\nTransaction committed.\n");
+        
+        } catch(SQLException Ex) {
+            System.out.println("Error running the sample queries.  Machine Error: " +
+                    Ex.toString());
+        } finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
+        }
     }
     
     public void deliveryTransaction() {
@@ -81,11 +326,11 @@ public class GroceryDelivery {
     		
         	System.out.print("Enter the warehouse ID: ");
         	
-        	while (warehouse_id < 0) {
+        	while (warehouse_id < 1) {
         		try {
         			warehouse_id = Integer.parseInt(scan.next());
         			
-        			if (warehouse_id < 0) {
+        			if (warehouse_id < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -97,11 +342,11 @@ public class GroceryDelivery {
     		System.out.print("Enter the distribution station: ");
     		
         
-        	while (distribution_station < 0) {
+        	while (distribution_station < 1) {
         		try {
         			distribution_station = Integer.parseInt(scan.next());
         			
-        			if (distribution_station < 0) {
+        			if (distribution_station < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -202,11 +447,11 @@ public class GroceryDelivery {
     		
         	System.out.print("Enter the warehouse ID: ");
         	
-        	while (warehouse_id < 0) {
+        	while (warehouse_id < 1) {
         		try {
         			warehouse_id = Integer.parseInt(scan.next());
         			
-        			if (warehouse_id < 0) {
+        			if (warehouse_id < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -218,11 +463,11 @@ public class GroceryDelivery {
     		System.out.print("Enter the distribution station: ");
     		
         
-        	while (distribution_station < 0) {
+        	while (distribution_station < 1) {
         		try {
         			distribution_station = Integer.parseInt(scan.next());
         			
-        			if (distribution_station < 0) {
+        			if (distribution_station < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -233,11 +478,11 @@ public class GroceryDelivery {
         	
         	System.out.print("Enter the customer ID for the distribution station: ");
         	
-        	while (custID < 0) {
+        	while (custID < 1) {
         		try {
         			custID = Integer.parseInt(scan.next());
         			
-        			if (custID < 0) {
+        			if (custID < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -322,11 +567,11 @@ public class GroceryDelivery {
     		
         	System.out.print("Enter the warehouse ID: ");
         	
-        	while (warehouse_id < 0) {
+        	while (warehouse_id < 1) {
         		try {
         			warehouse_id = Integer.parseInt(scan.next());
         			
-        			if (warehouse_id < 0) {
+        			if (warehouse_id < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -338,11 +583,11 @@ public class GroceryDelivery {
     		System.out.print("Enter the distribution station: ");
     		
         
-        	while (distribution_station < 0) {
+        	while (distribution_station < 1) {
         		try {
         			distribution_station = Integer.parseInt(scan.next());
         			
-        			if (distribution_station < 0) {
+        			if (distribution_station < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
@@ -353,11 +598,11 @@ public class GroceryDelivery {
         	
         	System.out.print("Enter the customer ID for the distribution station: ");
         	
-        	while (custID < 0) {
+        	while (custID < 1) {
         		try {
         			custID = Integer.parseInt(scan.next());
         			
-        			if (custID < 0) {
+        			if (custID < 1) {
         				System.out.print("Invalid input. Please try again: ");
         			}
         		}
