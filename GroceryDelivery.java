@@ -203,6 +203,7 @@ public class GroceryDelivery {
         			
         					if (itemID < 1 || itemID > maxItemID) {
         						System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
+        						itemID = -1; // reset
         					}
         					
         					//Already made a line item for this order
