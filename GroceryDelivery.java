@@ -148,10 +148,10 @@ public class GroceryDelivery {
         	resultSet = statement.executeQuery("Select max(id) from items");
         	if (resultSet.next()) {
         		maxItemID = resultSet.getInt(1);
-        		System.out.println("The database contains " + maxItemID + " unique items.");
+        		System.out.println("\nThe database contains " + maxItemID + " unique items.");
         	}
         	else {
-        		System.out.println("There are no items in the database.");
+        		System.out.println("\nThere are no items in the database.");
         		return;
         	}
         	
@@ -289,7 +289,7 @@ public class GroceryDelivery {
         	"id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " + 
         	distribution_station + ", " + custID + ", " + orderID + ", " + 
         	currentDate + ", 0, " + numLineItems + ")";
-        	System.out.println(insertOrder);
+        	//System.out.println(insertOrder);
         	statement.executeUpdate(insertOrder);
         	//left off here
            
@@ -656,7 +656,7 @@ public class GroceryDelivery {
 	
 	    	if (resultSet.next()) {	
 	    		orderID = resultSet.getInt(1);
-	    		System.out.println("Record found for this order: " + orderID);
+	    		System.out.println("Using orderID = " + orderID);
 	    	}
 	    	else {
 	    		System.out.println("No record for this customer.");
