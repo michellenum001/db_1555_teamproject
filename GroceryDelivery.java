@@ -142,21 +142,11 @@ public class GroceryDelivery {
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
             
+        	int orderID;
         	
-        	int maxItemID, orderID;
-        	//Get max # of items, so we know what number range to offer to the user.
-        	resultSet = statement.executeQuery("Select max(id) from items");
-        	if (resultSet.next()) {
-        		maxItemID = resultSet.getInt(1);
-        		System.out.println("\nThe database contains " + maxItemID + " unique items.");
-        	}
-        	else {
-        		System.out.println("\nThere are no items in the database.");
-        		return;
-        	}
-        	
-        	//Storing the itemPrices in an array
-        	double [] itemPrices = new double [maxItemID + 1];
+        	//Storing the itemPrices in an array. Right now I assumed 10000 number or fewer.
+        	//Feel free to change this.
+        	double [] itemPrices = new double [10000];
         	resultSet = statement.executeQuery("Select id, price from items");
         	while (resultSet.next()) {
         		int id = resultSet.getInt(1);
@@ -186,55 +176,26 @@ public class GroceryDelivery {
         	int quantity = -1;
         	String continueLineItems = "YES";
         	
-        	//if opt to not have a duplicate line item below, use this to avoid the line item transaction
-        	boolean duplicateItemNo = false;
-        	
-        	//Use this to track which item IDs user has ordered.
-        	
-        	ArrayList <Integer> usedItems = new ArrayList <Integer> ();
-        	
         	//Allow user to keep entering items.
-        	while (continueLineItems.equals("YES") && usedItems.size() != maxItemID) {
+        	while (continueLineItems.equals("YES")) {
         	
         		while (itemID < 1) {
-        			System.out.print("\nEnter the item ID for the line item order (between 1 and " + maxItemID + "): ");
+        			System.out.print("\nEnter the item ID for the line item order: ");
         			try {
         					itemID = Integer.parseInt(scan.next());
         			
-        					if (itemID < 1 || itemID > maxItemID) {
-        						System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
+        					if (itemID < 1) {
+        						System.out.print("\nInvalid input. Please enter the itemID for the line item order: ");
         						itemID = -1; // reset
         					}
         					
-        					//Already made a line item for this order
-        					if (usedItems.contains(itemID)) {
-        						System.out.println("You have already ordered this item.");
-        						
-        						String flag = "";
-        						while (!flag.equals("YES") && !flag.equals("NO")) {
-        							System.out.print("Are you sure you want to place another line item order for this item? Please enter 'yes' or 'no'. ");
-        							String input = scan.next();
-        							if (input.toUpperCase().equals("YES")) {
-        								flag = "YES";
-        							}
-        							else if (input.toUpperCase().equals("NO")) {
-        								flag = "NO";
-        								itemID = 1; //placeholder to avoid loop
-        								quantity = 1; //placeholder to avoid loop
-        								duplicateItemNo = true;
-        							}
-        						}
-        					}
         				}
         			catch (Exception e) {
-        				System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
+        				System.out.print("\nInvalid input. Please enter the itemID for the line item order: ");
         			}
         		}
         		
-        		usedItems.add(itemID);
-        		
-        		if (!duplicateItemNo)
-        			System.out.print("Enter the quantity of this item: ");
+        		System.out.print("Enter the quantity of this item: ");
         		while (quantity < 1) {
         			try {
         					quantity = Integer.parseInt(scan.next());
@@ -250,8 +211,7 @@ public class GroceryDelivery {
         		
         		double totalPrice = itemPrices[itemID] * quantity;
         		
-        		if (!duplicateItemNo)
-        			numLineItems++;
+        		numLineItems++;
         		
         		String insertLineItem = "insert into lineItems (warehouse_id, distributor_id, " + 
         		"custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
@@ -259,10 +219,9 @@ public class GroceryDelivery {
         		numLineItems + ", " + itemID + ", " + quantity + ", " + totalPrice + ", NULL)";
 
         		//System.out.println(insertLineItem);
-        		if (!duplicateItemNo) 
-        			statement.executeUpdate(insertLineItem);
+        		
+        		statement.executeUpdate(insertLineItem);
         			
-        		duplicateItemNo = false; // can reset it here
         		
         		//this is the boolean that determines if we continue the loop
         		continueLineItems = null;
@@ -283,7 +242,7 @@ public class GroceryDelivery {
         		}
         	}
         	
-        
+        	//just did a random date, will need to be changed
         	String currentDate = "TO_DATE('10-15-2015', 'MM-DD-YYYY')";
         	
         	String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
