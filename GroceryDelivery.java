@@ -181,14 +181,17 @@ public class GroceryDelivery {
             statement.executeUpdate(insertOrder);
             ArrayList <Integer> usedItems = new ArrayList <Integer> ();
             for (int i=0; i<numLineItems; i++){
-                System.out.println("Please input the basic information about No." + i + " item:");
+                System.out.println("Please input the basic information about No." + (i+1) + " item:");
                 //System.out.print("Please input the item ID for this line item: ");
                 int item_id = -1;
-                while(item_id < 1){
+                while(true){
                     System.out.print("Please input the item ID for this line item: ");
                     item_id = Integer.parseInt(scan.next());
                     if(item_id < 1 || item_id > maxItemID || usedItems.contains(item_id)){
                         System.out.print("Invalid input.");
+                    }
+                    else{
+                        break;
                     }
                 }
                 usedItems.add(item_id);
@@ -404,7 +407,7 @@ public class GroceryDelivery {
             resultSet = statement.executeQuery(findDistribution);
             while (resultSet.next()) {
                 distribution_id = resultSet.getInt(1);
-                String findLineItems = "select custID, order_id, price from lineItems where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and date_delivered is NULL";
+                String findLineItems = "select custID, order_id, quantity, price from lineItems where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and date_delivered is NULL";
                 Statement statement2 = connection.createStatement();
                 Statement statement3 = connection.createStatement();
                 resultSet2 = statement2.executeQuery(findLineItems);
@@ -413,23 +416,31 @@ public class GroceryDelivery {
                     cntRows++;
                     int custID = resultSet2.getInt(1);
                     int orderID  = resultSet2.getInt(2);
-                    double price = resultSet2.getInt(3);
-                    System.out.println("\nRecord found for this order: " + custID + ", " + orderID + ", " + price);
+                    int quan = resultSet2.getInt(3);
+                    double price = resultSet2.getInt(4);
+                    System.out.println("\nRecord found for this order line items: " + custID + ", " + orderID + ", " + price);
+                    System.out.println("warehouse id: " + warehouse_id);
+                    System.out.println("distribution station id: " + distribution_id);
+                    System.out.println("customer id: " + custID);
+                    System.out.println("order id: " + orderID);
+                    System.out.println("The quantity for this line item is: " + quan);
+                    System.out.println("price is: " + price);
                     String updateCompleted = "update orders set completed = 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and custID = " + custID + " and id = " + orderID;
                     statement3.executeUpdate(updateCompleted);
-                    System.out.println("Mared the order as completed.");
+                    System.out.println("Marked this line item as delivered.");
                     String updateBalance = "update customers set outstanding_balance = outstanding_balance - " + price + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
                     //update number_payments and num_deliveries
                     statement3.executeUpdate(updateBalance);
-                    System.out.println("Increase the outstanding balance by " + price);
-                    String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + "1 where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    System.out.println("Decrease the outstanding balance by " + price);
+                    String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + quan + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
                     statement3.executeUpdate(updateNumDeliveries);
-                    System.out.println("Increased the number of deliveries by one.");
+                    System.out.println("Increased the number of deliveries by " + quan + ".");
                 }
                 statement3.close();
                 if(cntRows > 0){
-                    String date = "TO-DATE('10-10-10', 'MM-DD-YYYY')";
-                    String setDelivered = "update lineItems set date_delivered = " + date + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id;
+                    String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
+                    String setDelivered = "update LineItems set date_delivered = " + "SYSDATE" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id;
+                    System.out.println(setDelivered);
                     statement2.executeQuery(setDelivered);
                     System.out.println("\n Set the deliveries to not NULL.");
                 }
@@ -724,9 +735,9 @@ public class GroceryDelivery {
             System.out.println("There are between 5 and 15 line items per order.");
             int numberWarehouses = 1;
             int numberDistribution = 8;
-            int numberCustomers = 20;
-            int numberItems = 1000;
-            int maxOrdersPerCustomer = 10;
+            int numberCustomers = 3000;
+            int numberItems = 10000;
+            int maxOrdersPerCustomer = 100;
             int minLineItemsPerOrder = 5;
             int maxLineItemsPerOrder = 15;
             
@@ -777,9 +788,8 @@ public class GroceryDelivery {
                 "'" + zip + "', " +
                 tax_rate + ", " +
                 sales_sum + ")";
-                
-                //System.out.println(insertDistribution);
                 statement.executeUpdate(insertDistribution);
+                //System.out.println(insertDistribution);
                 
             }
             System.out.println("Inserted " + numberDistribution + " tuples into the distribution_station table.");
@@ -797,8 +807,8 @@ public class GroceryDelivery {
                 "'" + name + "', " +
                 price + ")";
                 itemPrice.add(price);
-                //System.out.println(insertItem);
                 statement.executeUpdate(insertItem);
+                //System.out.println(insertItem);
                 
             }
             System.out.println("Inserted " + numberItems + " tuples into the items table.");
@@ -828,6 +838,7 @@ public class GroceryDelivery {
                     String insertCustomer = "insert into customers values(1" + ", " + (i+1) + ", " + (j+1) + ", " + "'" + fname + "'" + ", " + "'" + middle_init + "'" + ", " + "'" + lname + "'" + ", " + "'" + address + "'" + ", " + "'" + city + "'" + ", " + "'" + state + "'" + ", " + "'" + zip + "'" + ", " + "'" + phone + "'" + ", " + initial_date + ", " + Math.round(discount*100)/100 + ", " + Math.round(outstanding_balance*100)/100 + "," + year_spend + ", " + number_payments + ", " + number_deliveries + ")";
                     try{
                         statement.executeUpdate(insertCustomer);
+                        //System.out.println(insertCustomer);
                     }
                     catch (Exception e){
                         System.out.println(insertCustomer);
@@ -855,6 +866,8 @@ public class GroceryDelivery {
                         int completed = 1;
                         int num_lineItems = r.nextInt(maxLineItemsPerOrder-minLineItemsPerOrder+1)+minLineItemsPerOrder;
                         String insertOrder = "insert into orders values(1" + ", " + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + order_date + ", " + completed + ", " + num_lineItems + ")";
+                        statement.executeUpdate(insertOrder);
+                        //System.out.println(insertOrder);
                         for(int m = 0; m<num_lineItems; m++){
                             int item_id = r.nextInt(numberItems) +1;
                             while(entered.contains(item_id)){
@@ -871,6 +884,7 @@ public class GroceryDelivery {
                             String insertLineItem = "insert into LineItems values(1," + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + (m+1) + ", " + item_id + ", " + quantity + ", " + price + ", " + date_delivered + ")";
                             lineItemNumInserted++;
                             statement.executeUpdate(insertLineItem);
+                            //System.out.println(insertLineItem);
                         }
                     }
                 }
@@ -895,7 +909,9 @@ public class GroceryDelivery {
                 
                 //System.out.println(insertWarehouseStock);
                 statement.executeUpdate(insertWarehouseStock);
+                //System.out.println(insertWarehouseStock);
             }
+            System.out.println("Inserted " + numberItems + " tuples into the warehouse_stock table.");
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
             
