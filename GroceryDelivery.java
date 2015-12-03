@@ -12,7 +12,7 @@ public class GroceryDelivery {
     private static Connection connection; //used to hold the jdbc connection to the DB
     private Statement statement; //used to create an instance of the connection
     private PreparedStatement preparedStatement; //used to create a prepared statement, that will be later reused
-    private ResultSet resultSet, resultSet2; //used to hold the result of your query (if one
+    private ResultSet resultSet, resultSet2, resultSet3; //used to hold the result of your query (if one
     // exists)
     private String query;  //this will hold the query we are using
     
@@ -84,223 +84,134 @@ public class GroceryDelivery {
     }
     
     public void newOrderTransaction() {
-    	int distribution_station = -1;
-    	int warehouse_id = -1;
-    	int custID = -1;
-    	Scanner scan = new Scanner(System.in);
-    	
-    	try {
-    		System.out.println("\nThe following info will be used to determine the " + 
-    		"unique customer: ");
-    		
-        	System.out.print("Enter the warehouse ID: ");
-        	
-        	while (warehouse_id < 1) {
-        		try {
-        			warehouse_id = Integer.parseInt(scan.next());
-        			
-        			if (warehouse_id < 1) {
-        				System.out.print("Invalid input. Please try again: ");
-        			}
-        		}
-        		catch (Exception e) {
-        			System.out.print("Invalid input. Please try again: ");
-        		}
-        	}
-    		
-    		System.out.print("Enter the distribution station: ");
-    		
-        
-        	while (distribution_station < 1) {
-        		try {
-        			distribution_station = Integer.parseInt(scan.next());
-        			
-        			if (distribution_station < 1) {
-        				System.out.print("Invalid input. Please try again: ");
-        			}
-        		}
-        		catch (Exception e) {
-        			System.out.print("Invalid input. Please try again: ");
-        		}
-        	}
-        	
-        	System.out.print("Enter the customer ID: ");
-        	while (custID < 1) {
-        		try {
-        			custID = Integer.parseInt(scan.next());
-        			
-        			if (custID < 1) {
-        				System.out.print("Invalid input. Please try again: ");
-        			}
-        		}
-        		catch (Exception e) {
-        			System.out.print("Invalid input. Please try again: ");
-        		}
-        	}
-        	
-        	String startTransaction = "SET TRANSACTION READ WRITE";
+        int distribution_station = -1;
+        int warehouse_id = -1;
+        int custID = -1;
+        Scanner scan = new Scanner(System.in);
+        try {
+            System.out.println("\n The following info will be used to determine the unique customer: ");
+            System.out.println("Enter the warehouse ID: ");
+            while (warehouse_id < 1) {
+                try{
+                    warehouse_id = Integer.parseInt(scan.next());
+                    if(warehouse_id < 1) {
+                        System.out.print("Invalid input. Please try again: ");
+                    }
+                }
+                catch (Exception e){
+                    System.out.print("Invalid input. Please try again: ");
+                }
+            }
+            System.out.print("Enter the distribution station ID: ");
+            while (distribution_station < 1) {
+                try {
+                    distribution_station = Integer.parseInt(scan.next());
+                    if (distribution_station < 1){
+                        System.out.print("Invalid input. Please try again: ");
+                    }
+                }
+                catch (Exception e) {
+                    System.out.print("Invalid input. Please try again: ");
+                }
+            }
+            System.out.print("Enter the customer ID: ");
+            while (custID < 1){
+                try{
+                    custID = Integer.parseInt(scan.next());
+                    if(custID < 1) {
+                        System.out.print("Invalid input. Please try again: ");
+                    }
+                }
+                catch (Exception e){
+                    System.out.print("Invalid input. Please try again: ");
+                }
+            }
+            String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
-            
-        	
-        	int maxItemID, orderID;
-        	//Get max # of items, so we know what number range to offer to the user.
-        	resultSet = statement.executeQuery("Select max(id) from items");
-        	if (resultSet.next()) {
-        		maxItemID = resultSet.getInt(1);
-        		System.out.println("\nThe database contains " + maxItemID + " unique items.");
-        	}
-        	else {
-        		System.out.println("\nThere are no items in the database.");
-        		return;
-        	}
-        	
-        	//Storing the itemPrices in an array
-        	double [] itemPrices = new double [maxItemID + 1];
-        	resultSet = statement.executeQuery("Select id, price from items");
-        	while (resultSet.next()) {
-        		int id = resultSet.getInt(1);
-        		double price = resultSet.getDouble(2);
-        		itemPrices[id] = price;
-        	}
-        	
-        	//Get max order # from the user, so we can start at the next number for the
-        	//next order
-        	String userLastOrder = "Select max(id) from orders where warehouse_id = " +
-        	warehouse_id + " and distributor_id = " + distribution_station + 
-        	" and custID = " + custID;
-        	resultSet = statement.executeQuery(userLastOrder);
-        	
-        	if (resultSet.next()) {
-        		orderID = resultSet.getInt(1)+1;
-        		System.out.println("Last order for this customer was #" + (orderID-1) + ", so we now have order #" + orderID);
-        	}
-        	else {
-        		System.out.println("This customer is not found in the database.");
-        		return;
-        	}
-        	
-        	//total number of line items, to be stored in the orders table
-        	int numLineItems = 0;
-        	int itemID = -1;
-        	int quantity = -1;
-        	String continueLineItems = "YES";
-        	
-        	//if opt to not have a duplicate line item below, use this to avoid the line item transaction
-        	boolean duplicateItemNo = false;
-        	
-        	//Use this to track which item IDs user has ordered.
-        	
-        	ArrayList <Integer> usedItems = new ArrayList <Integer> ();
-        	
-        	//Allow user to keep entering items.
-        	while (continueLineItems.equals("YES") && usedItems.size() != maxItemID) {
-        	
-        		while (itemID < 1) {
-        			System.out.print("\nEnter the item ID for the line item order (between 1 and " + maxItemID + "): ");
-        			try {
-        					itemID = Integer.parseInt(scan.next());
-        			
-        					if (itemID < 1 || itemID > maxItemID) {
-        						System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
-        						itemID = -1; // reset
-        					}
-        					
-        					//Already made a line item for this order
-        					if (usedItems.contains(itemID)) {
-        						System.out.println("You have already ordered this item.");
-        						
-        						String flag = "";
-        						while (!flag.equals("YES") && !flag.equals("NO")) {
-        							System.out.print("Are you sure you want to place another line item order for this item? Please enter 'yes' or 'no'. ");
-        							String input = scan.next();
-        							if (input.toUpperCase().equals("YES")) {
-        								flag = "YES";
-        							}
-        							else if (input.toUpperCase().equals("NO")) {
-        								flag = "NO";
-        								itemID = 1; //placeholder to avoid loop
-        								quantity = 1; //placeholder to avoid loop
-        								duplicateItemNo = true;
-        							}
-        						}
-        					}
-        				}
-        			catch (Exception e) {
-        				System.out.print("\nInvalid input. Please enter the itemID for the line item order (between 1 and " + maxItemID + "): ");
-        			}
-        		}
-        		
-        		usedItems.add(itemID);
-        		
-        		if (!duplicateItemNo)
-        			System.out.print("Enter the quantity of this item: ");
-        		while (quantity < 1) {
-        			try {
-        					quantity = Integer.parseInt(scan.next());
-        			
-        					if (quantity < 1) {
-        						System.out.print("\nInvalid input. Please enter the quantity of this item: ");
-        					}
-        				}
-        			catch (Exception e) {
-        				System.out.print("\nInvalid input. Please enter the quantity of this item: ");
-        			}
-        		}
-        		
-        		double totalPrice = itemPrices[itemID] * quantity;
-        		
-        		if (!duplicateItemNo)
-        			numLineItems++;
-        		
-        		String insertLineItem = "insert into lineItems (warehouse_id, distributor_id, " + 
-        		"custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
-        		warehouse_id + ", " + distribution_station + ", " + custID + ", " + orderID + ", " +
-        		numLineItems + ", " + itemID + ", " + quantity + ", " + totalPrice + ", NULL)";
-
-        		//System.out.println(insertLineItem);
-        		if (!duplicateItemNo) 
-        			statement.executeUpdate(insertLineItem);
-        			
-        		duplicateItemNo = false; // can reset it here
-        		
-        		//this is the boolean that determines if we continue the loop
-        		continueLineItems = null;
-        		
-        		while (continueLineItems == null) {
-        			System.out.print("\nDo you want to enter another line item in this order? Please enter 'yes' or 'no'. ");
-        			String input = scan.next();
-        			if (input.toUpperCase().equals("YES")) {
-        				continueLineItems = "YES";
-        				
-        				//reset
-        				itemID = -1;
-        				quantity = -1;
-        			}
-        			else if (input.toUpperCase().equals("NO")) {
-        				continueLineItems = "NO";
-        			}
-        		}
-        	}
-        	
-        
-        	String currentDate = "TO_DATE('10-15-2015', 'MM-DD-YYYY')";
-        	
-        	String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
-        	"id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " + 
-        	distribution_station + ", " + custID + ", " + orderID + ", " + 
-        	currentDate + ", 0, " + numLineItems + ")";
-        	//System.out.println(insertOrder);
-        	statement.executeUpdate(insertOrder);
-        	//left off here
-           
-	    	
+            int maxItemID, orderID;
+            resultSet = statement.executeQuery("select max(id) from items");
+            if(resultSet.next()){
+                maxItemID = resultSet.getInt(1);
+                System.out.println("\n The database contains " + maxItemID + " unique items.");
+            }
+            else {
+                System.out.println("\nThere are no items in the database.");
+                return;
+            }
+            double[] itemPrices = new double[maxItemID + 1];
+            resultSet = statement.executeQuery("select id, price from items");
+            while(resultSet.next()){
+                int id = resultSet.getInt(1);
+                double price = resultSet.getDouble(2);
+                itemPrices[id] = price;
+            }
+            String userLastOrder = "select max(id) from orders where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_station + " and custID = " + custID;
+            resultSet = statement.executeQuery(userLastOrder);
+            if (resultSet.next()){
+                orderID = resultSet.getInt(1) + 1;
+                System.out.println("Last order for this customer was #" + (orderID-1) + ", so we now have order #" + orderID);
+            }
+            else{
+                System.out.println("This customer is not found in the database.");
+                return;
+            }
+            int numLineItems = 0;
+            System.out.print("Please input the number of line items for this order: ");
+            while(numLineItems <=0 ){
+                //numLineItems = Integer.parseInt(scan.next());
+                try{
+                    numLineItems = Integer.parseInt(scan.next());
+                    if(numLineItems < 1) {
+                        System.out.print("Invalid input. Please try again: ");
+                    }
+                }
+                catch (Exception e){
+                    System.out.print("Invalid input. Please try again: ");
+                }
+            }
+            String currentDate = "TO_DATE('10-15-2015', 'MM-DD-YYYY')";
+            String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
+            "id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " +
+            distribution_station + ", " + custID + ", " + orderID + ", " +
+            currentDate + ", 0, " + numLineItems + ")";
+            //System.out.println(insertOrder);
+            statement.executeUpdate(insertOrder);
+            ArrayList <Integer> usedItems = new ArrayList <Integer> ();
+            for (int i=0; i<numLineItems; i++){
+                System.out.println("Please input the basic information about No." + i + " item:");
+                //System.out.print("Please input the item ID for this line item: ");
+                int item_id = -1;
+                while(item_id < 1){
+                    System.out.print("Please input the item ID for this line item: ");
+                    item_id = Integer.parseInt(scan.next());
+                    if(item_id < 1 || item_id > maxItemID || usedItems.contains(item_id)){
+                        System.out.print("Invalid input.");
+                    }
+                }
+                usedItems.add(item_id);
+                int quantity = -1;
+                //System.out.print("Please input the quantity for this item: ");
+                while(quantity <= 0){
+                    System.out.print("Please input the quantity for this item: ");
+                    quantity = Integer.parseInt(scan.next());
+                    if(quantity <= 0){
+                        System.out.print("Invalid input.");
+                    }
+                }
+                double item_price = itemPrices[item_id]*quantity;
+                String insertLineItem = "insert into LineItems (warehouse_id, distributor_id, " +
+                "custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
+                warehouse_id + ", " + distribution_station + ", " + custID + ", " + orderID + ", " +
+                (i+1) + ", " + item_id + ", " + quantity + ", " + item_price + ", NULL)";
+                statement.executeUpdate(insertLineItem);
+            }
             statement.executeUpdate("COMMIT");
             System.out.println("\nTransaction committed.\n");
-        
+            
         } catch(SQLException Ex) {
             System.out.println("Error running the sample queries.  Machine Error: " +
-                    Ex.toString());
+                               Ex.toString());
         } finally{
             try {
                 if (statement != null)
@@ -311,6 +222,7 @@ public class GroceryDelivery {
                 System.out.println("Cannot close Statement. Machine error: "+e.toString());
             }
         }
+        
     }
     
     public void stockLevelTransaction() {
@@ -466,119 +378,78 @@ public class GroceryDelivery {
     }
     
     public void deliveryTransaction() {
-    	int distribution_station = -1;
-    	int warehouse_id = -1;
-    	Scanner scan = new Scanner(System.in);
-    	
-    	try {
-    		System.out.println("\nThe following info will be used to determine the distribution station: ");
-    		
-        	System.out.print("Enter the warehouse ID: ");
-        	
-        	while (warehouse_id < 1) {
-        		try {
-        			warehouse_id = Integer.parseInt(scan.next());
-        			
-        			if (warehouse_id < 1) {
-        				System.out.print("Invalid input. Please try again: ");
-        			}
-        		}
-        		catch (Exception e) {
-        			System.out.print("Invalid input. Please try again: ");
-        		}
-        	}
-    		
-    		System.out.print("Enter the distribution station: ");
-    		
-        
-        	while (distribution_station < 1) {
-        		try {
-        			distribution_station = Integer.parseInt(scan.next());
-        			
-        			if (distribution_station < 1) {
-        				System.out.print("Invalid input. Please try again: ");
-        			}
-        		}
-        		catch (Exception e) {
-        			System.out.print("Invalid input. Please try again: ");
-        		}
-        	}
-        	
-        	String startTransaction = "SET TRANSACTION READ WRITE";
+        int warehouse_id = -1;
+        int distribution_id = -1;
+        Scanner scan = new Scanner(System.in);
+        try {
+            System.out.println("\n The following info will be used to determine the distribution station: ");
+            System.out.println("Enter the warehouse ID: ");
+            while (warehouse_id < 1) {
+                try {
+                    warehouse_id = Integer.parseInt(scan.next());
+                    if (warehouse_id < 1){
+                        System.out.println("Invalid input. Please try again: ");
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("Invalid input. Please try again: ");
+                }
+            }
+            String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
-            
-            String findLineItems = "Select custID, order_id, price from lineItems where warehouse_id = " + 
-            warehouse_id + " and distributor_id = " + distribution_station + 
-            " and date_delivered is NULL";
-            
-            resultSet = statement.executeQuery(findLineItems);
-            
-            //Can only have one resultSet with a statement, so we make a second here to 
-            //avoid overwriting the resultSet of the findLineItems query.
-            
-            Statement statement2 = connection.createStatement();
-            int cntRows = 0;
-	
-			//right now this only iterates once for some reason
-	    	while (resultSet.next()){
-	    		cntRows++;
-	    		int custID = resultSet.getInt(1);
-	    		int orderID = resultSet.getInt(2);
-	    		double price = resultSet.getDouble(3);
-	    		System.out.println("\nRecord found for this order: " + custID + ", " + orderID + ", " + price);
-	    		
-	    		String updateCompleted = "update orders set completed = 1" + 
-	    		 " where warehouse_id = " + warehouse_id + " and " +
-            	"distributor_id = " + distribution_station + " and custid = " + custID +
-            	" and id = " + orderID;
-	    		statement2.executeUpdate(updateCompleted);
-	    		System.out.println("Marked the order as completed.");
-	    		
-	    		String updateBalance = "update customers set outstanding_balance = outstanding_balance + " 
-	    		+ price + " where warehouse_id = " + warehouse_id + " and " +
-            	"distributor_id = " + distribution_station + " and id = " + custID;
-	    		statement2.executeUpdate(updateBalance);
-	    		System.out.println("Increased the outstanding balance by " + price);
-	    		
-	    		String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " 
-	    		+ "1 where warehouse_id = " + warehouse_id + " and " +
-            	"distributor_id = " + distribution_station + " and id = " + custID;
-	    		statement2.executeUpdate(updateNumDeliveries);
-	    		System.out.println("Increased the number of deliveries by one.");
-	    		
-	    		
-	    	}
-	    	
-	    	statement2.close(); // no longer need this one
-	    	
-	    	if (cntRows > 0) {
-	    		String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
-	    		String setDelivered = "update lineItems set date_delivered = " + date + 
-	    		" where warehouse_id = " + warehouse_id + " and distributor_id = " + 
-	    		distribution_station;
-	    		statement.executeQuery(setDelivered);
-	    		System.out.println("\nSet the deliveries to not NULL.");
-	    	}
-	    	else {
-	    		System.out.println("\nAll order line items for the given distribution station " + 
-	    		" are already delivered.");
-	    	}
-	    	
+            String findDistribution  = "select id from distribution_station where warehouse_id = " + warehouse_id;
+            resultSet = statement.executeQuery(findDistribution);
+            while (resultSet.next()) {
+                distribution_id = resultSet.getInt(1);
+                String findLineItems = "select custID, order_id, price from lineItems where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and date_delivered is NULL";
+                Statement statement2 = connection.createStatement();
+                Statement statement3 = connection.createStatement();
+                resultSet2 = statement2.executeQuery(findLineItems);
+                int cntRows = 0;
+                while(resultSet2.next()){
+                    cntRows++;
+                    int custID = resultSet2.getInt(1);
+                    int orderID  = resultSet2.getInt(2);
+                    double price = resultSet2.getInt(3);
+                    System.out.println("\nRecord found for this order: " + custID + ", " + orderID + ", " + price);
+                    String updateCompleted = "update orders set completed = 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and custID = " + custID + " and id = " + orderID;
+                    statement3.executeUpdate(updateCompleted);
+                    System.out.println("Mared the order as completed.");
+                    String updateBalance = "update customers set outstanding_balance = outstanding_balance - " + price + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    //update number_payments and num_deliveries
+                    statement3.executeUpdate(updateBalance);
+                    System.out.println("Increase the outstanding balance by " + price);
+                    String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + "1 where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    statement3.executeUpdate(updateNumDeliveries);
+                    System.out.println("Increased the number of deliveries by one.");
+                }
+                statement3.close();
+                if(cntRows > 0){
+                    String date = "TO-DATE('10-10-10', 'MM-DD-YYYY')";
+                    String setDelivered = "update lineItems set date_delivered = " + date + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id;
+                    statement2.executeQuery(setDelivered);
+                    System.out.println("\n Set the deliveries to not NULL.");
+                }
+                else{
+                    System.out.println("\n All order line items for the given distribution station are already delivered.");
+                }
+                statement2.close();
+            }
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
-        
-        } catch(SQLException Ex) {
-            System.out.println("Error running the sample queries.  Machine Error: " +
-                    Ex.toString());
+        } catch(SQLException Ex){
+            System.out.println("Error running the sample queries. Machine Error: " + Ex.toString());
         } finally{
-            try {
-                if (statement != null)
+            try{
+                if(statement != null){
                     statement.close();
-                if (preparedStatement != null)
+                }
+                if(preparedStatement != null){
                     preparedStatement.close();
-            } catch (SQLException e) {
-                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+                }
+            } catch (SQLException e){
+                System.out.println("Cannot close Statement. Machine error: " + e.toString());
             }
         }
     }
