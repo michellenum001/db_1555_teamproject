@@ -410,7 +410,7 @@ public class GroceryDelivery {
             resultSet = statement.executeQuery(findDistribution);
             while (resultSet.next()) {
                 distribution_id = resultSet.getInt(1);
-                String findLineItems = "select custID, order_id, quantity, price from lineItems where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and date_delivered is NULL";
+                String findLineItems = "select custID, order_id, item_id, quantity, price from lineItems where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and date_delivered is NULL";
                 Statement statement2 = connection.createStatement();
                 Statement statement3 = connection.createStatement();
                 resultSet2 = statement2.executeQuery(findLineItems);
@@ -419,8 +419,9 @@ public class GroceryDelivery {
                     cntRows++;
                     int custID = resultSet2.getInt(1);
                     int orderID  = resultSet2.getInt(2);
-                    int quan = resultSet2.getInt(3);
-                    double price = resultSet2.getInt(4);
+                    int item_id = resultSet2.getInt(3);
+                    int quan = resultSet2.getInt(4);
+                    double price = resultSet2.getInt(5);
                     System.out.println("\nRecord found for this order line items: " + custID + ", " + orderID + ", " + price);
                     System.out.println("warehouse id: " + warehouse_id);
                     System.out.println("distribution station id: " + distribution_id);
@@ -441,12 +442,21 @@ public class GroceryDelivery {
                     String updateNumberPayments = "update customers set number_payments = number_payments + 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
                     statement3.executeUpdate(updateNumberPayments);
                     System.out.println("Increased the number of payments by 1.");
+                    String updateStockQuantity = "update warehouse_stock set quantity_in_stock = quantity_in_stock - " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    statement3.executeUpdate(updateStockQuantity);
+                    System.out.println("Decrease stock of this item in warehouse by " + quan);
+                    String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    statement3.executeUpdate(updateStockSold);
+                    System.out.println("Increase quantity of sold for this item in warehouse by " + quan);
+                    String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1" + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    statement3.executeUpdate(updateStockOrder);
+                    System.out.println("Increase number of orders for this item in warehouse by 1.");
                 }
                 statement3.close();
                 if(cntRows > 0){
                     //String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
                     String setDelivered = "update LineItems set date_delivered = " + "SYSDATE" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id;
-                    System.out.println(setDelivered);
+                    //System.out.println(setDelivered);
                     statement2.executeQuery(setDelivered);
                     System.out.println("\n Set the deliveries to not NULL.");
                 }
