@@ -51,7 +51,7 @@ public class GroceryDelivery {
     {
         int choice = -1;
         System.out.println();
-        System.out.println("Initially set up the database...");
+        System.out.println("Initially set up the database...You can also set up the database manually.");
         createTables();
         populateTables();
         while (choice < 0 || choice != 6) {
@@ -59,7 +59,7 @@ public class GroceryDelivery {
             
             if (choice == 0) {
                 createTables();
-                populateTables();
+                populateTables1();
             }
             
             if (choice == 1) {
@@ -176,7 +176,7 @@ public class GroceryDelivery {
             String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
             "id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " +
             distribution_station + ", " + custID + ", " + orderID + ", " +
-            currentDate + ", 0, " + numLineItems + ")";
+            "SYSDATE" + ", 0, " + numLineItems + ")";
             //System.out.println(insertOrder);
             statement.executeUpdate(insertOrder);
             ArrayList <Integer> usedItems = new ArrayList <Integer> ();
@@ -187,8 +187,11 @@ public class GroceryDelivery {
                 while(true){
                     System.out.print("Please input the item ID for this line item: ");
                     item_id = Integer.parseInt(scan.next());
-                    if(item_id < 1 || item_id > maxItemID || usedItems.contains(item_id)){
+                    if(item_id < 1 || item_id > maxItemID){
                         System.out.print("Invalid input.");
+                    }
+                    else if (usedItems.contains(item_id)){
+                        System.out.println("This item has been added into the order.");
                     }
                     else{
                         break;
@@ -435,10 +438,13 @@ public class GroceryDelivery {
                     String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + quan + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
                     statement3.executeUpdate(updateNumDeliveries);
                     System.out.println("Increased the number of deliveries by " + quan + ".");
+                    String updateNumberPayments = "update customers set number_payments = number_payments + 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    statement3.executeUpdate(updateNumberPayments);
+                    System.out.println("Increased the number of payments by 1.");
                 }
                 statement3.close();
                 if(cntRows > 0){
-                    String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
+                    //String date = "TO_DATE('10-10-10', 'MM-DD-YYYY')";
                     String setDelivered = "update LineItems set date_delivered = " + "SYSDATE" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id;
                     System.out.println(setDelivered);
                     statement2.executeQuery(setDelivered);
@@ -685,11 +691,15 @@ public class GroceryDelivery {
             }
             
             String updateCustomer = "Update customers set outstanding_balance = " +
-            (outstanding_balance - paymentAmt) + "where warehouse_id = 1 and " +
+            (outstanding_balance - paymentAmt) + " where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and id = " + custID;
             
             statement.executeQuery(updateCustomer);
             System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
+            
+            String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
+            statement.executeQuery(updateYearSpent);
+            System.out.println("\nAdd " + paymentAmt + " towards the year spend amount in the customers table.");
             
             String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
             paymentAmt + "where warehouse_id = 1 and " +
@@ -726,20 +736,20 @@ public class GroceryDelivery {
         
         try
         {
-            System.out.println("There is one warehouse.");
-            System.out.println("There are eight distribution stations per warehouse.");
-            System.out.println("There are 3000 customers per distribution station.");
-            System.out.println("There are 10000 items.");
-            System.out.println("There are 10000 stock listings per warehouse.");
-            System.out.println("There are between 1 and 100 orders per customer.");
-            System.out.println("There are between 5 and 15 line items per order.");
+            System.out.println("There is 1 warehouse.");
+            System.out.println("There are 3 distribution stations per warehouse.");
+            System.out.println("There are 10 customers per distribution station.");
+            System.out.println("There are 100 items.");
+            System.out.println("There are 100 stock listings per warehouse.");
+            System.out.println("There are between 1 and 5 orders per customer.");
+            System.out.println("There are between 3 and 7 line items per order.");
             int numberWarehouses = 1;
-            int numberDistribution = 8;
-            int numberCustomers = 3000;
-            int numberItems = 10000;
-            int maxOrdersPerCustomer = 100;
-            int minLineItemsPerOrder = 5;
-            int maxLineItemsPerOrder = 15;
+            int numberDistribution = 3;
+            int numberCustomers = 10;
+            int numberItems = 100;
+            int maxOrdersPerCustomer = 5;
+            int minLineItemsPerOrder = 3;
+            int maxLineItemsPerOrder = 7;
             
             System.out.println("\nPopulating table now...");
             System.out.println("---------------------------------------------\n");
@@ -834,7 +844,7 @@ public class GroceryDelivery {
                     double year_spend = 0;
                     //int number_payments = r.nextInt(20);
                     int number_payments = 0;
-                    int number_deliveries = r.nextInt(20);
+                    int number_deliveries = 0;
                     String insertCustomer = "insert into customers values(1" + ", " + (i+1) + ", " + (j+1) + ", " + "'" + fname + "'" + ", " + "'" + middle_init + "'" + ", " + "'" + lname + "'" + ", " + "'" + address + "'" + ", " + "'" + city + "'" + ", " + "'" + state + "'" + ", " + "'" + zip + "'" + ", " + "'" + phone + "'" + ", " + initial_date + ", " + Math.round(discount*100)/100 + ", " + Math.round(outstanding_balance*100)/100 + "," + year_spend + ", " + number_payments + ", " + number_deliveries + ")";
                     try{
                         statement.executeUpdate(insertCustomer);
@@ -847,7 +857,7 @@ public class GroceryDelivery {
                     }
                 }
             }
-            System.out.println("Inserted " + numberCustomers + "*8" + " tuples into the customers table.");
+            System.out.println("Inserted " + numberCustomers + "*" + numberDistribution + " tuples into the customers table.");
             
             //Number is dependent on random outcome, so will keep track.
             int orderNumInserted = 0;
@@ -863,7 +873,7 @@ public class GroceryDelivery {
                         int day = r.nextInt(28) + 1;
                         int year = r.nextInt(6) + 2010;
                         String order_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
-                        int completed = 1;
+                        int completed = 0;
                         int num_lineItems = r.nextInt(maxLineItemsPerOrder-minLineItemsPerOrder+1)+minLineItemsPerOrder;
                         String insertOrder = "insert into orders values(1" + ", " + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + order_date + ", " + completed + ", " + num_lineItems + ")";
                         statement.executeUpdate(insertOrder);
@@ -896,9 +906,9 @@ public class GroceryDelivery {
             {
                 int warehouse_id = 1;
                 int item_id = i + 1;
-                int inStock = r.nextInt(1000000);
-                int sold = r.nextInt(1000000);
-                int orders = r.nextInt(1000000);
+                int inStock = r.nextInt(200);
+                int sold = 0;
+                int orders = 0;
                 
                 String insertWarehouseStock = "insert into warehouse_stock values(" +
                 warehouse_id + ", " +
@@ -930,105 +940,56 @@ public class GroceryDelivery {
         }
     }
     
-    
     public void populateTables1(){
-        
         try
         {
             Scanner scan = new Scanner(System.in);
-            int numberDistribution, numberCustomers, numberItems, maxOrdersPerCustomer, maxLineItemsPerOrder;
+            int numberWarehouses = 1;
+            int numberDistribution = 3;
+            int numberCustomers = 10;
+            int numberItems = 100;
+            int maxOrdersPerCustomer = 5;
+            int minLineItemsPerOrder = 3;
+            int maxLineItemsPerOrder = 7;
             
-            //getting user input
-            
-            System.out.print("Enter how many distribution centers you want for warehouse #1: ");
-            try {
-                numberDistribution = Integer.parseInt(scan.next());
-                
-                if (numberDistribution < 1)
-                {
-                    System.out.println("Not a valid entry: Defaulting to 10.");
-                    numberDistribution = 10;
-                }
+            System.out.println("The default number for warehouses is 1: ");
+            System.out.println("Please input the number of distribution stations, the default number is 3.");
+            numberDistribution = Integer.parseInt(scan.next());
+            if(numberDistribution < 1){
+                System.out.println("Invalid input. The number of distribution stations is set as 3.");
+                numberDistribution = 3;
             }
-            catch (Exception e)
-            {
-                System.out.println("Not a valid entry: Defaulting to 10.");
-                numberDistribution = 10;
-            }
-            
-            System.out.print("Enter how many customers you want total: ");
-            try {
-                numberCustomers = Integer.parseInt(scan.next());
-                
-                if (numberCustomers < 1)
-                {
-                    System.out.println("Not a valid entry: Defaulting to 100.");
-                    numberCustomers = 100;
-                }
-            }
-            catch (Exception e)
-            {
-                System.out.println("Not a valid entry: Defaulting to 100.");
-                numberCustomers = 100;
+            System.out.println("Please input the number of customers for each distribution station, the default number is 10: ");
+            numberCustomers = Integer.parseInt(scan.next());
+            if(numberCustomers < 1){
+                System.out.println("Invalid input. The number of customers for each distributon station is set as 10.");
+                numberCustomers = 10;
             }
             
-            System.out.print("Enter how many items you want total: ");
-            try {
-                numberItems = Integer.parseInt(scan.next());
-                if (numberItems < 1)
-                {
-                    System.out.println("Not a valid entry: Defaulting to 25.");
-                    numberItems = 25;
-                }
+            System.out.println("Please input the number of items, the default value is 100: ");
+            numberItems = Integer.parseInt(scan.next());
+            if(numberItems < 1){
+                System.out.println("Invalid input. The number of items is set as 100.");
+                numberItems = 100;
             }
-            catch (Exception e)
-            {
-                System.out.println("Not a valid entry: Defaulting to 25.");
-                numberItems = 25;
-            }
-            
-            System.out.print("The number of orders for each customer is randomly determined individually, with every customer having at least one order. Enter the maximum number possible: ");
-            try {
-                maxOrdersPerCustomer = Integer.parseInt(scan.next());
-                
-                if (maxOrdersPerCustomer < 1)
-                {
-                    System.out.println("Not a valid entry: Defaulting to 5.");
-                    maxOrdersPerCustomer = 5;
-                }
-            }
-            catch (Exception e)
-            {
-                System.out.println("Not a valid entry: Defaulting to 5.");
+            System.out.println("Please input the max number of orders for each customers, the default value is 5: ");
+            maxOrdersPerCustomer = Integer.parseInt(scan.next());
+            if(maxOrdersPerCustomer < 1){
+                System.out.println("Invalid input. The max number of orders is set as 5.");
                 maxOrdersPerCustomer = 5;
             }
-            
-            
-            System.out.print("The number of line items in each order is randomly determined individually, with every order having at least one line item. Enter the maximum number possible: ");
-            try {
-                maxLineItemsPerOrder = Integer.parseInt(scan.next());
-                if (maxLineItemsPerOrder < 1)
-                {
-                    System.out.println("Not a valid entry: Defaulting to 5.");
-                    maxLineItemsPerOrder = 5;
-                }
-                //can only use each once
-                if (maxLineItemsPerOrder > numberItems)
-                {
-                    System.out.println("Too many items: Setting to " + numberItems + ".");
-                    maxLineItemsPerOrder = numberItems;
-                }
+            System.out.println("Please input the min number of line items, the default value is 3: ");
+            minLineItemsPerOrder = Integer.parseInt(scan.next());
+            if(minLineItemsPerOrder < 1){
+                System.out.println("Invalid input. The min number of line items is set as 3.");
+                minLineItemsPerOrder = 3;
             }
-            catch (Exception e)
-            {
-                System.out.println("Not a valid entry: Defaulting to 5.");
-                maxLineItemsPerOrder = 5;
+            System.out.println("Please input the max number of line items, the default value is 7: ");
+            maxLineItemsPerOrder = Integer.parseInt(scan.next());
+            if(maxLineItemsPerOrder < 1){
+                System.out.println("Invalid input. The max number of line items is set as 7.");
+                maxLineItemsPerOrder = 7;
             }
-            
-            System.out.println("\nPopulating table now...");
-            System.out.println("---------------------------------------------\n");
-            
-            int numberWarehouses = 1;
             double warehouseSale  = 0;
             ArrayList<Double> distributorSale = new ArrayList<Double>();
             for (int i=0;i<numberDistribution;i++){
@@ -1073,9 +1034,8 @@ public class GroceryDelivery {
                 "'" + zip + "', " +
                 tax_rate + ", " +
                 sales_sum + ")";
-                
-                //System.out.println(insertDistribution);
                 statement.executeUpdate(insertDistribution);
+                //System.out.println(insertDistribution);
                 
             }
             System.out.println("Inserted " + numberDistribution + " tuples into the distribution_station table.");
@@ -1093,258 +1053,98 @@ public class GroceryDelivery {
                 "'" + name + "', " +
                 price + ")";
                 itemPrice.add(price);
-                //System.out.println(insertItem);
                 statement.executeUpdate(insertItem);
+                //System.out.println(insertItem);
                 
             }
             System.out.println("Inserted " + numberItems + " tuples into the items table.");
             
-            int lastID = 0;
-            
             // insert into customers
-            for (int i = 0; i < numberCustomers; i++)
-            {
-                //number of customers per distribution center
-                int number = numberCustomers/numberDistribution;
-                
-                //if more customers than distribution centers, default = 1 per center
-                if (number == 0)
-                    number = 1;
-                
-                int warehouse_id = 1;
-                int distributor_id = (i/number) + 1;
-                int id = (i%number) + 1;
-                
-                //if number of distribution centers does not divide numberCustomers
-                //evenly, need to check at the upper bound
-                //ie 100 cust, 12 centers.
-                //So instead of 8 people for last center, will have all the rest (16
-                
-                if (distributor_id > numberDistribution)
-                {
-                    distributor_id = numberDistribution;
-                    id = lastID + 1;
-                }
-                lastID = id;
-                
-                // i%1000 to avoid too much storage and errors
-                
-                String fname = "aaa" + i%1000;
-                String middle_init = "a" + i%1000;
-                String lname = "zzz" + i%1000;
-                String address = i%1000 + " Pittsburgh St.";
-                String city = "city" + i%1000;
-                String state = "state" + i%1000;
-                String zip = (15000 + i%1000) + "";
-                String phone = "phone" + i%1000;
-                int month = r.nextInt(12) + 1;
-                int day = r.nextInt(28) + 1;
-                int year = r.nextInt(6) + 2010;
-                String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
-                
-                double discount = r.nextDouble()*10;
-                double outstanding_balance = r.nextDouble()*1000;
-                //double year_spend = r.nextDouble()*1000 + outstanding_balance;
-                double year_spend = 0;
-                //int number_payments = r.nextInt(20);
-                int number_payments = 0;
-                
-                int number_deliveries = r.nextInt(20);
-                
-                String insertCustomer = "insert into customers values(" +
-                warehouse_id + ", " +
-                distributor_id + ", " +
-                id + ", " +
-                "'" + fname + "', " +
-                "'" + middle_init + "', " +
-                "'" + lname + "', " +
-                "'" + address + "', " +
-                "'" + city + "', " +
-                "'" + state + "', " +
-                "'" + zip + "', " +
-                "'" + phone + "', " +
-                initial_date + ", " +
-                Math.round(discount*100)/100 + ", " +
-                Math.round(outstanding_balance*100)/100 + ", " +
-                year_spend + ", " +
-                number_payments + ", " +
-                number_deliveries + ")";
-                
-                //System.out.println(insertCustomer);
-                
-                try {
-                    statement.executeUpdate(insertCustomer);
-                }
-                catch (Exception e) {
-                    System.out.println(insertCustomer);
-                    statement.executeUpdate(insertCustomer);
-                    System.exit(0);
-                }
-                
-                
-            }
-            System.out.println("Inserted " + numberCustomers + " tuples into the customers table.");
-            
-            //Number is dependent on random outcome, so will keep track.
-            int numOrdersInserted = 0;
-            int numLineItemsInserted = 0;
-            int lastI = 0;
-            lastID = numberCustomers/numberDistribution;
-            
-            //insert into orders, lineItems table
-            for (int i = 0; i < numberCustomers; i++)
-            {
-                int numOrders = r.nextInt(maxOrdersPerCustomer) + 1;
-                
-                for (int j = 0; j < numOrders; j++)
-                {
-                    //number of customers per distribution center
-                    int number = numberCustomers/numberDistribution;
-                    
-                    //if more customers than distribution centers, default = 1 per center
-                    if (number == 0)
-                        number = 1;
-                    
-                    int warehouse_id = 1;
-                    int distributor_id = (i/number) + 1;
-                    int custID = (i%number) + 1;
-                    int orderID = j + 1;
-                    
-                    //if number of distribution centers does not divide numberCustomers
-                    //evenly, need to check at the upper bound
-                    //ie 100 cust, 12 centers.
-                    //So instead of 8 people for last center, will have all the rest
-                    // (12,12,12,12,12,12,12,16)
-                    
-                    //System.out.println("\ni+1 = " + (i+1));
-                    
-                    if (distributor_id > numberDistribution)
-                    {
-                        distributor_id = numberDistribution;
-                        
-                        //this is the first order. Need to switch custID
-                        if (lastI != i)
-                        {
-                            custID = lastID + 1;
-                            lastID = custID;
-                        }
-                        // just need to use current custID
-                        else
-                        {
-                            custID = lastID;
-                        }
-                    }
-                    lastI = i;
-                    
+            for (int i=0; i< numberDistribution; i++){
+                for (int j=0; j<numberCustomers; j++){
+                    String fname = "fname" + j;
+                    String middle_init = "a" + j;
+                    String lname = "lname" + j;
+                    String address = "address" + j;
+                    String city = "city" + j;
+                    String state = "state" + j;
+                    String zip = (15000 + i%1000) + "";
+                    String phone = "phone" + j;
                     int month = r.nextInt(12) + 1;
                     int day = r.nextInt(28) + 1;
                     int year = r.nextInt(6) + 2010;
-                    String order_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
-                    
-                    //int completed = r.nextInt(2);
-                    int completed = 1;
-                    int num_lineItems = r.nextInt(maxLineItemsPerOrder)+1;
-                    
-                    String insertOrder = "insert into orders values(" +
-                    warehouse_id + ", " +
-                    distributor_id + ", " +
-                    custID + ", " +
-                    orderID + ", " +
-                    order_date + ", " +
-                    completed + ", " +
-                    num_lineItems + ")";
-                    
-                    numOrdersInserted++;
-                    
-                    //System.out.println(insertOrder);
-                    try {
-                        statement.executeUpdate(insertOrder);
-                        String orderQuery = "select number_payments from customers where warehouse_id = "+ warehouse_id + " and distributor_id = "+distributor_id + " and id = " + custID;
-                        resultSet = statement.executeQuery(orderQuery);
-                        if(!resultSet.next()){
-                            System.out.println("false");
-                        }
-                        int number_pay = resultSet.getInt(1) +1;
-                        String updateCustomers = "update customers set number_payments = " + number_pay + " where warehouse_id=" + warehouse_id + " and distributor_id = " + distributor_id + " and id =" + custID;
-                        statement.executeUpdate(updateCustomers);
-                        
+                    String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
+                    double discount = r.nextDouble()*10;
+                    double outstanding_balance = r.nextDouble()*1000;
+                    //double year_spend = r.nextDouble()*1000 + outstanding_balance;
+                    double year_spend = 0;
+                    //int number_payments = r.nextInt(20);
+                    int number_payments = 0;
+                    int number_deliveries = 0;
+                    String insertCustomer = "insert into customers values(1" + ", " + (i+1) + ", " + (j+1) + ", " + "'" + fname + "'" + ", " + "'" + middle_init + "'" + ", " + "'" + lname + "'" + ", " + "'" + address + "'" + ", " + "'" + city + "'" + ", " + "'" + state + "'" + ", " + "'" + zip + "'" + ", " + "'" + phone + "'" + ", " + initial_date + ", " + Math.round(discount*100)/100 + ", " + Math.round(outstanding_balance*100)/100 + "," + year_spend + ", " + number_payments + ", " + number_deliveries + ")";
+                    try{
+                        statement.executeUpdate(insertCustomer);
+                        //System.out.println(insertCustomer);
                     }
-                    catch (Exception e)
-                    {
-                        System.out.println("Failed here:");
-                        System.out.println(insertOrder);
-                    }
-                    
-                    //ArrayList to store which itemIDs were already used.
-                    ArrayList <Integer> entered = new ArrayList <Integer> ();
-                    
-                    for (int x = 0; x < num_lineItems; x++)
-                    {
-                        int lineItemID = x+1;
-                        int itemID = r.nextInt(numberItems)+1;
-                        
-                        // if duplicate, repick
-                        // Will violate PK if itemID already was used
-                        while (entered.contains(itemID))
-                            itemID = r.nextInt(numberItems)+1;
-                        
-                        entered.add(itemID);
-                        
-                        int quantity = r.nextInt(10)+1;
-                        //double price = Math.round(quantity * r.nextDouble()*150*100)/100;
-                        double price = itemPrice.get(itemID - 1)*quantity;
-                        int monthDeliv = r.nextInt(12) + 1;
-                        int dayDeliv = r.nextInt(28) + 1;
-                        int yearDeliv = r.nextInt(6) + 2010;
-                        //String date_delivered = "TO_DATE('" + monthDeliv + "-" + dayDeliv + "-" + yearDeliv + "', 'MM-DD-YYYY')";
-                        String date_delivered = "NULL";
-                        double curVal = distributorSale.get(Integer.valueOf(distributor_id)-1);
-                        distributorSale.set(Integer.valueOf(distributor_id)-1,curVal+price);
-                        
-                        warehouseSale += price;
-                        String insertLineItem = "insert into LineItems values(" +
-                        warehouse_id + ", " +
-                        distributor_id + ", " +
-                        custID + ", " +
-                        orderID + ", " +
-                        lineItemID + ", " +
-                        itemID + ", " +
-                        quantity + ", " +
-                        price + ", " +
-                        date_delivered + ")";
-                        //System.out.println(insertLineItem);
-                        try {
-                            statement.executeUpdate(insertLineItem);
-                            String queryCustomers = "select year_spend from customers where warehouse_id = " + warehouse_id + " and distributor_id = " + distributor_id + " and id = "+ custID;
-                            resultSet = statement.executeQuery(queryCustomers);
-                            if(!resultSet.next()){
-                                System.out.println("false");
-                            }
-                            String amount = resultSet.getString(1);
-                            double newAmount = Double.valueOf(amount) + price;
-                            String updateCustomers = "update customers set year_spend = " + newAmount + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distributor_id + " and id = "+ custID;
-                            statement.executeUpdate(updateCustomers);
-                        }
-                        catch (Exception e)
-                        {
-                            System.out.println("Failed here:");
-                            System.out.println(insertLineItem);
-                        }
-                        numLineItemsInserted++;
+                    catch (Exception e){
+                        System.out.println(insertCustomer);
+                        statement.executeUpdate(insertCustomer);
+                        System.exit(0);
                     }
                 }
             }
-            //numLineItems
-            System.out.println("Inserted " + numOrdersInserted + " tuples into the orders table.");
-            System.out.println("Inserted " + numLineItemsInserted + " tuples into the lineItems table.");
+            System.out.println("Inserted " + numberCustomers + "*" + numberDistribution + " tuples into the customers table.");
+            
+            //Number is dependent on random outcome, so will keep track.
+            int orderNumInserted = 0;
+            int lineItemNumInserted = 0;
+            //insert into orders, lineItems
+            for (int i=0; i<numberDistribution; i++){
+                for (int j = 0; j< numberCustomers; j++){
+                    int numOrders = r.nextInt(maxOrdersPerCustomer) + 1;
+                    orderNumInserted += numOrders;
+                    for(int k = 0; k<numOrders; k++){
+                        ArrayList <Integer> entered = new ArrayList <Integer> ();
+                        int month = r.nextInt(12) + 1;
+                        int day = r.nextInt(28) + 1;
+                        int year = r.nextInt(6) + 2010;
+                        String order_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
+                        int completed = 0;
+                        int num_lineItems = r.nextInt(maxLineItemsPerOrder-minLineItemsPerOrder+1)+minLineItemsPerOrder;
+                        String insertOrder = "insert into orders values(1" + ", " + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + order_date + ", " + completed + ", " + num_lineItems + ")";
+                        statement.executeUpdate(insertOrder);
+                        //System.out.println(insertOrder);
+                        for(int m = 0; m<num_lineItems; m++){
+                            int item_id = r.nextInt(numberItems) +1;
+                            while(entered.contains(item_id)){
+                                item_id = r.nextInt(numberItems) +1;
+                            }
+                            entered.add(item_id);
+                            int quantity = r.nextInt(10) + 1;
+                            double price = itemPrice.get(item_id-1)*quantity;
+                            int monthDeliv = r.nextInt(12) + 1;
+                            int dayDeliv = r.nextInt(28) + 1;
+                            int yearDeliv = r.nextInt(6) + 2010;
+                            //String date_delivered = "TO_DATE('" + monthDeliv + "-" + dayDeliv + "-" + yearDeliv + "', 'MM-DD-YYYY')";
+                            String date_delivered = "NULL";
+                            String insertLineItem = "insert into LineItems values(1," + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + (m+1) + ", " + item_id + ", " + quantity + ", " + price + ", " + date_delivered + ")";
+                            lineItemNumInserted++;
+                            statement.executeUpdate(insertLineItem);
+                            //System.out.println(insertLineItem);
+                        }
+                    }
+                }
+            }
+            System.out.println("Inserted " + orderNumInserted + " tuples into the orders table.");
+            System.out.println("Inserted " + lineItemNumInserted + " tuples into the lineItems table.");
             
             for (int i = 0; i < numberItems; i++)
             {
                 int warehouse_id = 1;
                 int item_id = i + 1;
-                int inStock = r.nextInt(1000000);
-                int sold = r.nextInt(1000000);
-                int orders = r.nextInt(1000000);
+                int inStock = r.nextInt(200);
+                int sold = 0;
+                int orders = 0;
                 
                 String insertWarehouseStock = "insert into warehouse_stock values(" +
                 warehouse_id + ", " +
@@ -1355,17 +1155,9 @@ public class GroceryDelivery {
                 
                 //System.out.println(insertWarehouseStock);
                 statement.executeUpdate(insertWarehouseStock);
-                
+                //System.out.println(insertWarehouseStock);
             }
-            
-            int numberWarehouseStockInserted = numberWarehouses * numberItems;
-            System.out.println("Inserted " + numberWarehouseStockInserted + " tuples into the warehouse_stock table.\n");
-            String updateWarehouse = "update warehouses set sales_sum = " + warehouseSale + " where id = 1";
-            statement.executeUpdate(updateWarehouse);
-            for(int i=0;i<numberDistribution;i++){
-                String updateDistributor = "update distribution_station set sales_sum = " + distributorSale.get(i) + " where id = " + (i+1);
-                statement.executeUpdate(updateDistributor);
-            }
+            System.out.println("Inserted " + numberItems + " tuples into the warehouse_stock table.");
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
             
