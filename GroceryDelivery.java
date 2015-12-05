@@ -396,7 +396,7 @@ public class GroceryDelivery {
             
             System.out.println("There are a total of " + cntResult + " items that have a "
                                + "stock under the threshold in the distribution station's warehouse.");
-            System.out.println("They are: " + itemsQualifying);
+            System.out.println("They are items: " + itemsQualifying);
             
             statement.executeUpdate("COMMIT");
             System.out.println("\nTransaction committed.\n");
@@ -422,7 +422,7 @@ public class GroceryDelivery {
         Scanner scan = new Scanner(System.in);
         try {
             System.out.println("\n The following info will be used to determine the distribution station: ");
-            System.out.println("Enter the warehouse ID: ");
+            System.out.print("Enter the warehouse ID: ");
             while (warehouse_id < 1) {
                 try {
                     warehouse_id = Integer.parseInt(scan.next());
@@ -463,28 +463,40 @@ public class GroceryDelivery {
                     System.out.println("order id: " + orderID);
                     System.out.println("The quantity for this line item is: " + quan);
                     System.out.println("price is: " + price);
-                    String updateCompleted = "update orders set completed = 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and custID = " + custID + " and id = " + orderID;
-                    statement3.executeUpdate(updateCompleted);
-                    System.out.println("Marked this line item as delivered.");
-                    String updateBalance = "update customers set outstanding_balance = outstanding_balance - " + price + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
-                    //update number_payments and num_deliveries
-                    statement3.executeUpdate(updateBalance);
-                    System.out.println("Decrease the outstanding balance by " + price);
-                    String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + quan + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
-                    statement3.executeUpdate(updateNumDeliveries);
-                    System.out.println("Increased the number of deliveries by " + quan + ".");
-                    String updateNumberPayments = "update customers set number_payments = number_payments + 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
-                    statement3.executeUpdate(updateNumberPayments);
-                    System.out.println("Increased the number of payments by 1.");
-                    String updateStockQuantity = "update warehouse_stock set quantity_in_stock = quantity_in_stock - " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
-                    statement3.executeUpdate(updateStockQuantity);
-                    System.out.println("Decrease stock of this item in warehouse by " + quan);
-                    String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
-                    statement3.executeUpdate(updateStockSold);
-                    System.out.println("Increase quantity of sold for this item in warehouse by " + quan);
-                    String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1" + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
-                    statement3.executeUpdate(updateStockOrder);
-                    System.out.println("Increase number of orders for this item in warehouse by 1.");
+                    
+                    //Make sure it's in stock.
+                    String checkInStock = "select quantity_in_stock from warehouse_stock where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    resultSet3 = statement3.executeQuery(checkInStock);
+					resultSet3.next();
+                    int quantityInStock = resultSet3.getInt(1);
+                    
+                    if (quantityInStock < quan) {
+                    	System.out.println("Item #" + item_id + " is currently out of stock in warehouse #" + warehouse_id + ", so it cannot be delivered right now.");
+                    }
+                    else {
+                    	String updateCompleted = "update orders set completed = 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and custID = " + custID + " and id = " + orderID;
+                    	statement3.executeUpdate(updateCompleted);
+                    	System.out.println("Marked this line item as delivered.");
+                    	String updateBalance = "update customers set outstanding_balance = outstanding_balance - " + price + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                   		//update number_payments and num_deliveries
+                    	statement3.executeUpdate(updateBalance);
+                    	System.out.println("Decrease the outstanding balance by " + price);
+                    	String updateNumDeliveries = "update customers set num_deliveries = num_deliveries + " + quan + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    	statement3.executeUpdate(updateNumDeliveries);
+                    	System.out.println("Increased the number of deliveries by " + quan + ".");
+                    	String updateNumberPayments = "update customers set number_payments = number_payments + 1" + " where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_id + " and id = " + custID;
+                    	statement3.executeUpdate(updateNumberPayments);
+                    	System.out.println("Increased the number of payments by 1.");
+                    	String updateStockQuantity = "update warehouse_stock set quantity_in_stock = quantity_in_stock - " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    	statement3.executeUpdate(updateStockQuantity);
+                    	System.out.println("Decrease stock of this item in warehouse by " + quan);
+                    	String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quan + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    	statement3.executeUpdate(updateStockSold);
+                   	 	System.out.println("Increase quantity of sold for this item in warehouse by " + quan);
+                   	 	String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1" + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                    	statement3.executeUpdate(updateStockOrder);
+                    	System.out.println("Increase number of orders for this item in warehouse by 1.");
+                    }
                 }
                 statement3.close();
                 if(cntRows > 0){
@@ -942,6 +954,8 @@ public class GroceryDelivery {
             }
             System.out.println("Inserted " + (numberCustomers*numberDistribution) + " tuples into the customers table.");
             
+            int [] quantityOrderedPerItem = new int [numberItems + 1];
+            
             //Number is dependent on random outcome, so will keep track.
             int orderNumInserted = 0;
             int lineItemNumInserted = 0;
@@ -968,6 +982,7 @@ public class GroceryDelivery {
                             }
                             entered.add(item_id);
                             int quantity = r.nextInt(10) + 1;
+                            quantityOrderedPerItem[item_id] += quantity;
                             double price = itemPrice.get(item_id-1)*quantity;
                             int monthDeliv = r.nextInt(12) + 1;
                             int dayDeliv = r.nextInt(28) + 1;
@@ -989,7 +1004,11 @@ public class GroceryDelivery {
             {
                 int warehouse_id = 1;
                 int item_id = i + 1;
-                int inStock = r.nextInt(200);
+                
+                // So that we don't run out of stock, we set in stock to what is ordered 
+                // and then some random amount extra
+                int inStock = quantityOrderedPerItem[item_id] + r.nextInt(200);
+                
                 int sold = 0;
                 int orders = 0;
                 
