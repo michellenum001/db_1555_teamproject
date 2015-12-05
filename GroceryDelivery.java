@@ -905,7 +905,8 @@ public class GroceryDelivery {
             {
                 int id = i + 1;
                 String name = "item" + i;
-                double price = Math.round(r.nextDouble()*100*100)/100;
+                double price = Math.round(r.nextDouble()*100+1) + Math.round(r.nextDouble()*100)/100.0;
+                System.out.println(price);
                 
                 String insertItem = "insert into items values(" +
                 id + ", " +
