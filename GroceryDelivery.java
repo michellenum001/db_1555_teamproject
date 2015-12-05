@@ -92,7 +92,7 @@ public class GroceryDelivery {
         Scanner scan = new Scanner(System.in);
         try {
             System.out.println("\n The following info will be used to determine the unique customer: ");
-            System.out.println("Enter the warehouse ID: ");
+            System.out.print("Enter the warehouse ID: ");
             while (warehouse_id < 1) {
                 try{
                     warehouse_id = Integer.parseInt(scan.next());
@@ -128,6 +128,11 @@ public class GroceryDelivery {
                     System.out.print("Invalid input. Please try again: ");
                 }
             }
+            
+            // Will have a quick transaction to get some necessary info for the order.
+            // Then we commit and start a new transaction at the end when we are
+            // ready to execute all our updates to the database.
+            
             String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
@@ -152,14 +157,21 @@ public class GroceryDelivery {
             resultSet = statement.executeQuery(userLastOrder);
             if (resultSet.next()){
                 orderID = resultSet.getInt(1) + 1;
-                System.out.println("Last order for this customer was #" + (orderID-1) + ", so we now have order #" + orderID);
+                System.out.println("Last order for this customer was #" + (orderID-1) + ", so we now have order #" + orderID + "\n");
             }
             else{
                 System.out.println("This customer is not found in the database.");
                 return;
             }
+            
+            // Got preliminary info that we needed - will close transaction now
+            // while we get user input for the order info
+            statement.executeUpdate("COMMIT");
+            
+            ArrayList <String> sqlStatements = new ArrayList <String> ();
+            
             int numLineItems = 0;
-            System.out.print("Please input the number of line items for this order: ");
+            System.out.print("Please input the number of unique items (# of line items) for this order. Keep in mind that each item can only be used in one line item, so the maximum will be " + maxItemID + ": ");
             while(numLineItems <=0 ){
                 //numLineItems = Integer.parseInt(scan.next());
                 try{
@@ -167,18 +179,23 @@ public class GroceryDelivery {
                     if(numLineItems < 1) {
                         System.out.print("Invalid input. Please try again: ");
                     }
+                    if (numLineItems > maxItemID) {
+                    	System.out.println("More than the # of items: Setting to " + maxItemID);
+                    	numLineItems = maxItemID;
+                    }
                 }
                 catch (Exception e){
                     System.out.print("Invalid input. Please try again: ");
                 }
             }
-            String currentDate = "TO_DATE('10-15-2015', 'MM-DD-YYYY')";
+           
             String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
             "id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " +
             distribution_station + ", " + custID + ", " + orderID + ", " +
             "SYSDATE" + ", 0, " + numLineItems + ")";
             //System.out.println(insertOrder);
-            statement.executeUpdate(insertOrder);
+            //statement.executeUpdate(insertOrder);
+            sqlStatements.add(insertOrder);
             ArrayList <Integer> usedItems = new ArrayList <Integer> ();
             for (int i=0; i<numLineItems; i++){
                 System.out.println("Please input the basic information about No." + (i+1) + " item:");
@@ -212,8 +229,19 @@ public class GroceryDelivery {
                 "custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
                 warehouse_id + ", " + distribution_station + ", " + custID + ", " + orderID + ", " +
                 (i+1) + ", " + item_id + ", " + quantity + ", " + item_price + ", NULL)";
-                statement.executeUpdate(insertLineItem);
+               // statement.executeUpdate(insertLineItem);
+               sqlStatements.add(insertLineItem);
             }
+            
+            // Now that we are done with user input and getting the order info, 
+            // we can run all the statements.
+            
+            statement.executeUpdate(startTransaction);
+            for (String insertStatement: sqlStatements) {
+            	System.out.println("trying: " + insertStatement);
+            	statement.executeUpdate(insertStatement);
+            }
+            
             statement.executeUpdate("COMMIT");
             System.out.println("\nTransaction committed.\n");
             
@@ -234,6 +262,7 @@ public class GroceryDelivery {
     }
     
     public void stockLevelTransaction() {
+    
         int distribution_station = -1;
         int warehouse_id = -1;
         int stock_threshold = -1;
@@ -287,6 +316,8 @@ public class GroceryDelivery {
                     System.out.print("Invalid input. Please try again: ");
                 }
             }
+            
+            // Now that we have finished collecting user input, we can start the transaction
             
             String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
@@ -403,6 +434,9 @@ public class GroceryDelivery {
                     System.out.println("Invalid input. Please try again: ");
                 }
             }
+            
+            // Now that we are done collecting user input, we can start the transaction
+            
             String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement.executeUpdate(startTransaction);
@@ -540,7 +574,7 @@ public class GroceryDelivery {
                 }
             }
             
-            
+            //Now that we done collecting user input, we can start the transaction.
             String startTransaction = "SET TRANSACTION READ WRITE";
             
             statement = connection.createStatement();
@@ -660,28 +694,7 @@ public class GroceryDelivery {
                 }
             }
             
-            
-            String startTransaction = "SET TRANSACTION READ WRITE";
-            
-            statement = connection.createStatement();
-            statement.executeUpdate(startTransaction);
-            System.out.println("Transaction started successfully.\n");
-            
-            String checkCustomer = "Select outstanding_balance from customers where warehouse_id = 1 and " +
-            "distributor_id = " + distribution_station + " and id = " + custID;
-            
-            
-            resultSet = statement.executeQuery(checkCustomer);
-            double outstanding_balance = 0;
-            
-            if (resultSet.next()) {
-                outstanding_balance = resultSet.getDouble(1);
-                System.out.println("Record found for this customer: " + outstanding_balance);
-            }
-            else {
-                System.out.println("No record for this customer.");
-                return;
-            }
+           
             
             double paymentAmt = -1;
             
@@ -700,29 +713,61 @@ public class GroceryDelivery {
                 }
             }
             
+            //Can start transaction now that we have finished taking user input.
+            String startTransaction = "SET TRANSACTION READ WRITE";
+
+            statement = connection.createStatement();
+            statement.executeUpdate(startTransaction);
+            System.out.println("\nTransaction started successfully.\n");
+            
+            String checkCustomer = "Select outstanding_balance from customers where warehouse_id = 1 and " +
+            "distributor_id = " + distribution_station + " and id = " + custID;
+            
+            resultSet = statement.executeQuery(checkCustomer);
+            double outstanding_balance = 0;
+            
+            if (resultSet.next()) {
+                outstanding_balance = resultSet.getDouble(1);
+                System.out.println("Record found for this customer: Outstanding balance = " + outstanding_balance + " prior to payment.");
+                
+            }
+            else {
+                System.out.println("No record for this customer. Ending transaction and returning.");
+                statement.executeUpdate("COMMIT");
+                return;
+            }
+            
+            //Can start transaction now that we have finished taking user input.
+            
+            ArrayList <String> sqlStatements = new ArrayList <String> ();
+            
             String updateCustomer = "Update customers set outstanding_balance = " +
             (outstanding_balance - paymentAmt) + " where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and id = " + custID;
             
             statement.executeQuery(updateCustomer);
+       
             System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
             
             String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
             statement.executeQuery(updateYearSpent);
-            System.out.println("\nAdd " + paymentAmt + " towards the year spend amount in the customers table.");
+        
+            System.out.println("Added " + paymentAmt + " towards the year spend amount in the customers table.");
             
             String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
             paymentAmt + "where warehouse_id = 1 and " +
             "id = " + distribution_station;
             
             statement.executeQuery(updateDistribution);
+            
             System.out.println("Added " + paymentAmt + " towards the sales sum of distribution center #" + distribution_station + ".");
             
             String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
             paymentAmt + "where id = 1";
             
             statement.executeQuery(updateWarehouse);
-            System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");
+          
+            System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");           
             
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
@@ -755,38 +800,38 @@ public class GroceryDelivery {
             int maxLineItemsPerOrder = 7;
             
             System.out.println("The default number for warehouses is 1: ");
-            System.out.println("Please input the number of distribution stations, the default number is 3.");
+            System.out.print("Please input the number of distribution stations (the default number is 3): ");
             numberDistribution = Integer.parseInt(scan.next());
             if(numberDistribution < 1){
                 System.out.println("Invalid input. The number of distribution stations is set as 3.");
                 numberDistribution = 3;
             }
-            System.out.println("Please input the number of customers for each distribution station, the default number is 10: ");
+            System.out.print("Please input the number of customers for each distribution station (the default number is 10): ");
             numberCustomers = Integer.parseInt(scan.next());
             if(numberCustomers < 1){
                 System.out.println("Invalid input. The number of customers for each distributon station is set as 10.");
                 numberCustomers = 10;
             }
             
-            System.out.println("Please input the number of items, the default value is 100: ");
+            System.out.print("Please input the number of items (the default value is 100): ");
             numberItems = Integer.parseInt(scan.next());
             if(numberItems < 1){
                 System.out.println("Invalid input. The number of items is set as 100.");
                 numberItems = 100;
             }
-            System.out.println("Please input the max number of orders for each customers, the default value is 5: ");
+            System.out.print("Please input the max number of orders for each customers (the default value is 5): ");
             maxOrdersPerCustomer = Integer.parseInt(scan.next());
             if(maxOrdersPerCustomer < 1){
                 System.out.println("Invalid input. The max number of orders is set as 5.");
                 maxOrdersPerCustomer = 5;
             }
-            System.out.println("Please input the min number of line items, the default value is 3: ");
+            System.out.print("Please input the min number of line items (the default value is 3): ");
             minLineItemsPerOrder = Integer.parseInt(scan.next());
             if(minLineItemsPerOrder < 1){
                 System.out.println("Invalid input. The min number of line items is set as 3.");
                 minLineItemsPerOrder = 3;
             }
-            System.out.println("Please input the max number of line items, the default value is 7: ");
+            System.out.print("Please input the max number of line items (the default value is 7): ");
             maxLineItemsPerOrder = Integer.parseInt(scan.next());
             if(maxLineItemsPerOrder < 1){
                 System.out.println("Invalid input. The max number of line items is set as 7.");
@@ -895,7 +940,7 @@ public class GroceryDelivery {
                     }
                 }
             }
-            System.out.println("Inserted " + numberCustomers + "*" + numberDistribution + " tuples into the customers table.");
+            System.out.println("Inserted " + (numberCustomers*numberDistribution) + " tuples into the customers table.");
             
             //Number is dependent on random outcome, so will keep track.
             int orderNumInserted = 0;
