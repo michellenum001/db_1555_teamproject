@@ -51,7 +51,7 @@ public class GroceryDelivery {
     {
         int choice = -1;
         System.out.println();
-        System.out.println("Initially set up the database...You can also set up the database manually.");
+        //System.out.println("Initially set up the database...You can also set up the database manually.");
         //createTables();
         //populateTables();
         while (choice < 0 || choice != 6) {
