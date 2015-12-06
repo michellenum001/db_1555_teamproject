@@ -502,9 +502,9 @@ public class GroceryDelivery {
             		System.out.println("Quantity = " + quan);
             		System.out.println("Price = " + price);
             		System.out.println("Customer Discount = " + discounts[custID] + "%");
-            		System.out.println("Total w/ Discount = " + Math.round(100.0*((1.0-discounts[custID]/100.0)*price*quan))/100.0 + "\n");
+            		System.out.println("Total w/ Discount = " + Math.round(100.0*((1.0-discounts[custID]/100.0)*price))/100.0 + "\n");
             		
-            		double lineItemTotal = Math.round(100.0*(1.0-discounts[custID]/100.0)*price*quan)/100.0;
+            		double lineItemTotal = Math.round(100.0*(1.0-discounts[custID]/100.0)*price)/100.0;
             		
             		 //Make sure it's in stock.
                     String checkInStock = "select quantity_in_stock from warehouse_stock where warehouse_id = " + warehouseID + " and item_id = " + itemID;
