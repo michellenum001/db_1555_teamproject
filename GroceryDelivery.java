@@ -500,7 +500,7 @@ public class GroceryDelivery {
             		System.out.println("Line Item ID = " + lineItemID);
             		System.out.println("Item ID = " + itemID);
             		System.out.println("Quantity = " + quan);
-            		System.out.println("Price = " + price);
+            		System.out.println("Total Price for " + quan + " items = " + price);
             		System.out.println("Customer Discount = " + discounts[custID] + "%");
             		System.out.println("Total w/ Discount = " + Math.round(100.0*((1.0-discounts[custID]/100.0)*price))/100.0 + "\n");
             		
