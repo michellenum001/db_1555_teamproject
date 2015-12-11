@@ -91,6 +91,8 @@ public class jdbcTransactionThread extends Thread {
         //int custID = -1;
         //Scanner scan = new Scanner(System.in);
         try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             statement = connection.createStatement();
             // Will have a quick transaction to get some necessary info for the order.
             // Then we commit and start a new transaction at the end when we are
@@ -211,6 +213,8 @@ public class jdbcTransactionThread extends Thread {
         //Scanner scan = new Scanner(System.in);
         
         try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             statement = connection.createStatement();
             //Can start transaction now that we have finished taking user input.
             String startTransaction = "SET TRANSACTION READ WRITE";
@@ -323,6 +327,8 @@ public class jdbcTransactionThread extends Thread {
         //Scanner scan = new Scanner(System.in);
         
         try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             statement = connection.createStatement();
             //Now that we done collecting user input, we can start the transaction.
             String startTransaction = "SET TRANSACTION READ WRITE";
@@ -400,6 +406,8 @@ public class jdbcTransactionThread extends Thread {
         //int distribution_id = -1;
         //Scanner scan = new Scanner(System.in);
         try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             statement = connection.createStatement();
             // Now that we are done collecting user input, we can start the transaction
             
@@ -571,6 +579,8 @@ public class jdbcTransactionThread extends Thread {
         //Scanner scan = new Scanner(System.in);
         
         try {
+            connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             statement = connection.createStatement();
             String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
@@ -675,7 +685,7 @@ public class jdbcTransactionThread extends Thread {
          these, you either put the DB stuff in a try block or have your function
          throw the Exceptions and handle them later.  For this demo I will use the
          try blocks */
-    
+        
         String username, password;
         Scanner scan = new Scanner(System.in);
         System.out.print("\nEnter your Oracle username: ");
