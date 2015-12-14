@@ -7,6 +7,8 @@ import java.text.ParseException;
 //needed by java for database connection and manipulation
 import java.sql.Date;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class jdbcTransactionThread extends Thread {
     private static Connection connection; //used to hold the jdbc connection to the DB
@@ -15,6 +17,7 @@ public class jdbcTransactionThread extends Thread {
     private ResultSet resultSet, resultSet2, resultSet3; //used to hold the result of your query (if one
     // exists)
     private static GroceryDelivery grocery;
+    private static Lock lock;
     
     private static int NUM_OF_THREADS = 15;
     private int choice;
@@ -102,6 +105,7 @@ public class jdbcTransactionThread extends Thread {
             
             //String startTransaction = "SET TRANSACTION READ WRITE";
             //System.out.println("yes****************");
+            
             statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
             int maxItemID, orderID;
@@ -138,6 +142,16 @@ public class jdbcTransactionThread extends Thread {
             
             ArrayList <String> sqlStatements = new ArrayList <String> ();
             
+             double[][] discounts = new double [grocery.getNumDistribution()+1][grocery.getNumCustomer()+1];
+            
+            //Fill in discount array for customers
+           	String findDiscounts = "Select distributor_id, id, discount from customers where warehouse_id = " + warehouse_id + " and distributor_id = " + distribution_station + " and custID = " + custID;
+            ResultSet resultSet3 = statement.executeQuery(findDiscounts);
+            int count_customer = 1;
+            if (resultSet3.next()) {
+               	discounts[resultSet3.getInt(1)][resultSet3.getInt(2)] = Math.round(resultSet3.getDouble(3)*100.0)/100.0;
+            }
+            
             String insertOrder = "insert into orders (warehouse_id, distributor_id, custID, " +
             "id, order_date, completed, num_lineItems) values (" + warehouse_id + ", " +
             distribution_station + ", " + custID + ", " + orderID + ", " +
@@ -158,14 +172,18 @@ public class jdbcTransactionThread extends Thread {
                 }
                 usedItems.add(item_id);
                 int quantity = 1;
+                
+                
+                
                 //System.out.print("Please input the quantity for this item: ");
                 quantity = r.nextInt(10)+1;
                 //System.out.println("The item id is " + item_id + " and the quantity is " + quantity);
                 double item_price = itemPrices[item_id]*quantity;
+                double total = Math.round(100.0*(1.0-discounts[distribution_station][custID]/100.0)*item_price)/100.0;
                 String insertLineItem = "insert into LineItems (warehouse_id, distributor_id, " +
                 "custID, order_id, id, item_id, quantity, price, date_delivered) values (" +
                 warehouse_id + ", " + distribution_station + ", " + custID + ", " + orderID + ", " +
-                (i+1) + ", " + item_id + ", " + quantity + ", " + item_price + ", NULL)";
+                (i+1) + ", " + item_id + ", " + quantity + ", " + total + ", NULL)";
                 // statement.executeUpdate(insertLineItem);
                 sqlStatements.add(insertLineItem);
                 
@@ -178,7 +196,7 @@ public class jdbcTransactionThread extends Thread {
                 //System.out.println("Added " + paymentAmt + " towards the sales sum of distribution center #" + distribution_station + ".");
                 
                 String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
-                item_price + "where id = 1";
+                total + "where id = 1";
                 
                 sqlStatements.add(updateWarehouse);
                 
@@ -266,7 +284,7 @@ public class jdbcTransactionThread extends Thread {
                 
                 // If outstanding balance is already 0, don't need to pay towards it.
                 if (outstanding_balance == 0) {
-                    //System.out.println("Outstanding balance is 0, thus no payments need be applied. Ending transaction and returning now.");
+                    System.out.println("Outstanding balance is 0, thus no payments need be applied. Ending transaction and returning now.");
                     //statement.executeUpdate("COMMIT");
                     connection.commit();
                     return;
@@ -296,15 +314,18 @@ public class jdbcTransactionThread extends Thread {
             ArrayList <String> sqlStatements = new ArrayList <String> ();
             
             String updateCustomer = "Update customers set outstanding_balance = " +
-            (outstanding_balance - paymentAmt) + " where warehouse_id = 1 and " +
+            "outstanding_balance - " + paymentAmt + " where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and id = " + custID;
-            
+        
+        	System.out.println(updateCustomer);
+        
             statement.executeUpdate(updateCustomer);
             
             //System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
             
             String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
             statement.executeUpdate(updateYearSpent);
+            System.out.println(updateYearSpent + "\n");
             
             //System.out.println("Added " + paymentAmt + " towards the year spend amount in the customers table.");
             
@@ -388,6 +409,8 @@ public class jdbcTransactionThread extends Thread {
             resultSet = statement.executeQuery(lineInfo);
             
            	int cnt = 1;
+           	lock.lock();
+           	System.out.println("Items in most recent order: ");
             while (resultSet.next()) {
                 System.out.println("Line Item #" + cnt + "\n-----------------------------");
                 System.out.println("Item_id: " + resultSet.getInt(1));
@@ -397,11 +420,12 @@ public class jdbcTransactionThread extends Thread {
                     System.out.println("Date delivered: " + resultSet.getDate(4).toString());
                 }
                 else {
-                    System.out.println("Not delivered yet.");
+                    System.out.println("This line item is not delivered yet.");
                 }
                 System.out.println();
                 cnt++;
             }
+            lock.unlock();
             
             //statement.executeUpdate("COMMIT");
             connection.commit();
@@ -442,13 +466,15 @@ public class jdbcTransactionThread extends Thread {
         try {
             connection.setAutoCommit(false);
             connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+           
             statement = connection.createStatement();
             // Now that we are done collecting user input, we can start the transaction
-            
+            lock.lock();
             //String startTransaction = "SET TRANSACTION READ WRITE";
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
             System.out.println("Transaction 4 " + "for thread " + m_id +" started successfully.");
+           
             
             //Set up discount array for customers.
             String totalCustomers = "Select count(*) from customers";
@@ -513,13 +539,16 @@ public class jdbcTransactionThread extends Thread {
                     //System.out.println("Customer Discount = " + discounts[distributorID][custID] + "%");
                     //System.out.println("Total w/ Discount = " + Math.round(100.0*((1.0-discounts[distributorID][custID]/100.0)*price))/100.0 + "\n");
                     
-                    double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
+                    double lineItemTotal = price;
+                    //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
+                    //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     
                     //Make sure it's in stock.
                     String checkInStock = "select quantity_in_stock from warehouse_stock where warehouse_id = " + warehouseID + " and item_id = " + itemID;
                     resultSet3 = statement3.executeQuery(checkInStock);
                     resultSet3.next();
                     int quantityInStock = resultSet3.getInt(1);
+                    
                     
                     //not in stock
                     if (quantityInStock < quan) {
@@ -551,6 +580,7 @@ public class jdbcTransactionThread extends Thread {
                         
                         
                     }
+                   
                 } // done looping through all line items of a given order
                 
                 // if all the pending line items were in stock, then we have delivered
@@ -563,7 +593,7 @@ public class jdbcTransactionThread extends Thread {
                     //System.out.println("Marked the order as complete.\n");
                 }
                 else {
-                    //System.out.println("This order is still incomplete, as certain items are out of stock.\n");
+                    System.out.println("This order is still incomplete, as certain items are out of stock.\n");
                 }
             }
             statement3.close();
@@ -571,6 +601,7 @@ public class jdbcTransactionThread extends Thread {
             
             //statement.executeUpdate("COMMIT");
             connection.commit();
+         	 lock.unlock();
             System.out.println("\nTransaction 4 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex){
@@ -745,8 +776,10 @@ public class jdbcTransactionThread extends Thread {
             
             //create a connection to DB on class3.cs.pitt.edu
             connection = DriverManager.getConnection(url, username, password);
-            /*
+            
             //thread
+            lock = new ReentrantLock();
+            
             Thread[] threadList = new Thread[NUM_OF_THREADS];
             for (int i = 0; i < NUM_OF_THREADS; i++){
                 threadList[i] = new jdbcTransactionThread(i/3);
@@ -755,7 +788,8 @@ public class jdbcTransactionThread extends Thread {
             for (int i = 0; i < NUM_OF_THREADS; i++){
                 threadList[i].join();
             }
-             */
+            
+            
         }
         catch(Exception Ex)  {
             System.out.println("Error connecting to database.  Machine Error: " +

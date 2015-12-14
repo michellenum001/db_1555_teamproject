@@ -75,7 +75,7 @@ public class GroceryDelivery{
             int count = 0;
             while(resultSet2.next()){
                 count++;
-                System.out.println("lineItem count: " + count);
+                //System.out.println("lineItem count: " + count);
                 int warehouse_id = resultSet2.getInt(1);
                 int distributor_id = resultSet2.getInt(2);
                 int cust_id = resultSet2.getInt(3);
@@ -89,8 +89,11 @@ public class GroceryDelivery{
                 String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
                 price + "where warehouse_id = 1 and " + "id = " + distributor_id;
                 statement2.executeUpdate(updateDistribution);
-                String updateCustomer = "update customers set outstanding_balance = outstanding_balance + " + price + " where warehouse_id = 1 and " + "distributor_id = " + distributor_id + " and id = " + cust_id;
-                statement2.executeUpdate(updateCustomer);
+                
+                /* Outstanding balance increased only when delivered in transaction 3.4 */
+                //String updateCustomer = "update customers set outstanding_balance = outstanding_balance + " + price + " where warehouse_id = 1 and " + "distributor_id = " + distributor_id + " and id = " + cust_id;
+                //statement2.executeUpdate(updateCustomer);
+                
                 String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quantity + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
                 statement2.executeUpdate(updateStockSold);
                 String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1 " + "where warehouse_id = 1 " + "and item_id = " + item_id;
@@ -200,6 +203,7 @@ public class GroceryDelivery{
                 
             }
             System.out.println("Inserted " + numberItems + " tuples into the items table.");
+            double[][] discounts = new double [numberDistribution+1][numberCustomers+1];
             
             // insert into customers
             for (int i=0; i< numberDistribution; i++){
@@ -217,6 +221,7 @@ public class GroceryDelivery{
                     int year = r.nextInt(6) + 2010;
                     String initial_date = "TO_DATE('" + month + "-" + day + "-" + year + "', 'MM-DD-YYYY')";
                     double discount = (r.nextDouble()+0.1)*10;
+                    discounts[i+1][j+1] = discount;
                     double outstanding_balance = 0;
                     //double year_spend = r.nextDouble()*1000 + outstanding_balance;
                     double year_spend = 0;
@@ -263,16 +268,20 @@ public class GroceryDelivery{
                             while(entered.contains(item_id)){
                                 item_id = r.nextInt(numberItems) +1;
                             }
+                            
+                            //Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
+                    
                             entered.add(item_id);
                             int quantity = r.nextInt(10) + 1;
                             quantityOrderedPerItem[item_id] += quantity;
-                            double price = itemPrice.get(item_id-1)*quantity;
+                            double price = (itemPrice.get(item_id-1)*quantity);
+                          	double total = Math.round(100.0*(1.0-discounts[i+1][j+1]/100.0)*price)/100.0;
                             int monthDeliv = r.nextInt(12) + 1;
                             int dayDeliv = r.nextInt(28) + 1;
                             int yearDeliv = r.nextInt(6) + 2010;
                             //String date_delivered = "TO_DATE('" + monthDeliv + "-" + dayDeliv + "-" + yearDeliv + "', 'MM-DD-YYYY')";
                             String date_delivered = "NULL";
-                            String insertLineItem = "insert into LineItems values(1," + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + (m+1) + ", " + item_id + ", " + quantity + ", " + price + ", " + date_delivered + ")";
+                            String insertLineItem = "insert into LineItems values(1," + (i+1) + ", " + (j+1) + ", " + (k+1) + ", " + (m+1) + ", " + item_id + ", " + quantity + ", " + total + ", " + date_delivered + ")";
                             lineItemNumInserted++;
                             statement.executeUpdate(insertLineItem);
                             //System.out.println(insertLineItem);
@@ -290,8 +299,8 @@ public class GroceryDelivery{
                 
                 // So that we don't run out of stock, we set in stock to what is ordered
                 // and then some random amount extra
-                //int inStock = quantityOrderedPerItem[item_id] + r.nextInt(200);
-                int inStock = r.nextInt(200);
+                int inStock = quantityOrderedPerItem[item_id] + r.nextInt(200);
+                //int inStock = r.nextInt(200);
                 
                 int sold = 0;
                 int orders = 0;
