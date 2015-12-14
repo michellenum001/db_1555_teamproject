@@ -26,6 +26,7 @@ public class GroceryDelivery{
             connection.setAutoCommit(false);
             createTables();
             populateTables();
+            updateAggregateField();
         }
         catch(SQLException Ex){
             System.out.println("Error connecting to database. Machine Error: " + Ex.toString());
@@ -66,7 +67,9 @@ public class GroceryDelivery{
     
     public void updateAggregateField(){
         try{
+            String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
+<<<<<<< Updated upstream
             statement2 = connection.createStatement();
             String lineItemsOfOrder = "select * from lineItems";
             resultSet2 = statement.executeQuery(lineItemsOfOrder);
@@ -87,6 +90,27 @@ public class GroceryDelivery{
                 String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
                 price + "where warehouse_id = 1 and " + "id = " + distributor_id;
                 statement2.executeUpdate(updateDistribution);
+=======
+            statement.executeUpdate(startTransaction);
+            String lineItemsOfOrder = "select * from LineItems";
+            ResultSet resultSet1 = statement.executeQuery(lineItemsOfOrder);
+            int count = 0;
+            while(resultSet1.next()){
+                count++;
+                System.out.println("lineItem count: " + count);
+                int warehouse_id = resultSet1.getInt(1);
+                int distributor_id = resultSet1.getInt(2);
+                int cust_id = resultSet1.getInt(3);
+                int item_id = resultSet1.getInt(6);
+                int quantity = resultSet1.getInt(7);
+                double price = resultSet1.getDouble(8);
+                String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
+                price + " where id = 1";
+                statement.executeUpdate(updateWarehouse);
+                String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
+                price + " where warehouse_id = 1 and " + "id = " + distributor_id;
+                statement.executeUpdate(updateDistribution);
+>>>>>>> Stashed changes
                 String updateCustomer = "update customers set outstanding_balance = outstanding_balance + " + price + " where warehouse_id = 1 and " + "distributor_id = " + distributor_id + " and id = " + cust_id;
                 statement2.executeUpdate(updateCustomer);
                 String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quantity + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
@@ -94,10 +118,21 @@ public class GroceryDelivery{
                 String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1 " + "where warehouse_id = 1 " + "and item_id = " + item_id;
                 statement2.executeUpdate(updateStockOrder);
             }
+            statement.executeUpdate("COMMIT");
         }
         catch (SQLException Ex){
             System.out.println("Error running the queries.  Machine Error: " +
                                Ex.toString());
+        }
+        finally{
+            try {
+                if (statement != null)
+                    statement.close();
+                if (preparedStatement != null)
+                    preparedStatement.close();
+            } catch (SQLException e) {
+                System.out.println("Cannot close Statement. Machine error: "+e.toString());
+            }
         }
     }
     
@@ -299,7 +334,7 @@ public class GroceryDelivery{
             //To update the corresponding aggregate fields when data generation is finished.
             
             statement.executeUpdate("COMMIT");
-            updateAggregateField();
+            //updateAggregateField();
             System.out.println("Transaction committed.\n");
             
         } catch(SQLException Ex) {
