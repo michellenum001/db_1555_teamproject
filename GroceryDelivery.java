@@ -8,6 +8,7 @@ public class GroceryDelivery{
     private Connection connection;
     private Statement statement;
     private PreparedStatement preparedStatement;
+    private ResultSet resultSet;
     
     private int numberWarehouses, numberDistribution, numberCustomers;
     private int numberItems, maxOrdersPerCustomer, minLineItemsPerOrder;
@@ -61,6 +62,38 @@ public class GroceryDelivery{
     
     public int getNumMaxLineItem(){
         return maxLineItemsPerOrder;
+    }
+    
+    public void updateAggregateField(){
+        try{
+            statement = connection.createStatement();
+            String lineItemsOfOrder = "select warehouse_id, distributor_id, custID, item_id, quantity, price from lineItems";
+            resultSet = statement.executeQuery(lineItemsOfOrder);
+            while(resultSet.next()){
+                int warehouse_id = resultSet.getInt(1);
+                int distributor_id = resultSet.getInt(2);
+                int cust_id = resultSet.getInt(3);
+                int item_id = resultSet.getInt(4);
+                int quantity = resultSet.getInt(5);
+                double price = resultSet.getInt(6);
+                String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
+                price + "where id = 1";
+                statement.executeUpdate(updateWarehouse);
+                String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
+                price + "where warehouse_id = 1 and " + "id = " + distributor_id;
+                statement.executeUpdate(updateDistribution);
+                String updateCustomer = "update customers set outstanding_balance = outstanding_balance + " + price + " where warehouse_id = 1 and " + "distributor_id = " + distributor_id + " and id = " + cust_id;
+                statement.executeUpdate(updateCustomer);
+                String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quantity + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                statement.executeUpdate(updateStockSold);
+                String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1 " + "where warehouse_id = 1 " + "and item_id = " + item_id;
+                statement.executeUpdate(updateStockOrder);
+            }
+        }
+        catch (SQLException Ex){
+            System.out.println("Error running the queries.  Machine Error: " +
+                               Ex.toString());
+        }
     }
     
     public void populateTables(){
@@ -256,6 +289,10 @@ public class GroceryDelivery{
                 //System.out.println(insertWarehouseStock);
             }
             System.out.println("Inserted " + numberItems + " tuples into the warehouse_stock table.");
+            
+            //To update the corresponding aggregate fields when data generation is finished.
+            updateAggregateField();
+            
             statement.executeUpdate("COMMIT");
             System.out.println("Transaction committed.\n");
             

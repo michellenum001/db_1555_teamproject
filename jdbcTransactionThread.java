@@ -168,6 +168,20 @@ public class jdbcTransactionThread extends Thread {
                 (i+1) + ", " + item_id + ", " + quantity + ", " + item_price + ", NULL)";
                 // statement.executeUpdate(insertLineItem);
                 sqlStatements.add(insertLineItem);
+                
+                String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
+                item_price + "where warehouse_id = 1 and " +
+                "id = " + distribution_station;
+                
+                sqlStatements.add(updateDistribution);
+                
+                //System.out.println("Added " + paymentAmt + " towards the sales sum of distribution center #" + distribution_station + ".");
+                
+                String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
+                item_price + "where id = 1";
+                
+                sqlStatements.add(updateWarehouse);
+
             }
             
             // Now that we are done with user input and getting the order info,
@@ -184,8 +198,14 @@ public class jdbcTransactionThread extends Thread {
             System.out.println("\nTransaction 1 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex) {
-            System.out.println("Error running the sample queries.  Machine Error: " +
+            try{
+                connection.rollback();
+                System.out.println("\nTransaction 1 " + "for thread " + m_id +" roll back.\n");
+            }
+            catch (SQLException e2){
+                System.out.println("Error running the sample queries.  Machine Error: " +
                                Ex.toString());
+            }
         } finally{
             try {
                 if (statement != null)
@@ -224,7 +244,7 @@ public class jdbcTransactionThread extends Thread {
             
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
-            System.out.println("\nTransaction 2 " + "for thread " + m_id +" started successfully.\n");
+            System.out.println("Transaction 2 " + "for thread " + m_id +" started successfully.");
             
             String checkCustomer = "Select outstanding_balance from customers where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and id = " + custID;
@@ -271,27 +291,14 @@ public class jdbcTransactionThread extends Thread {
             (outstanding_balance - paymentAmt) + " where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and id = " + custID;
             
-            statement.executeQuery(updateCustomer);
+            statement.executeUpdate(updateCustomer);
             
             //System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
             
             String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
-            statement.executeQuery(updateYearSpent);
+            statement.executeUpdate(updateYearSpent);
             
             //System.out.println("Added " + paymentAmt + " towards the year spend amount in the customers table.");
-            
-            String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
-            paymentAmt + "where warehouse_id = 1 and " +
-            "id = " + distribution_station;
-            
-            statement.executeQuery(updateDistribution);
-            
-            //System.out.println("Added " + paymentAmt + " towards the sales sum of distribution center #" + distribution_station + ".");
-            
-            String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
-            paymentAmt + "where id = 1";
-            
-            statement.executeQuery(updateWarehouse);
             
             //System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");
             
@@ -300,8 +307,14 @@ public class jdbcTransactionThread extends Thread {
             System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex) {
-            System.out.println("Error running the sample queries.  Machine Error: " +
-                               Ex.toString());
+            try{
+                connection.rollback();
+                System.out.println("Transaction 2 " + "for thread " + m_id +" roll back.");
+            }
+            catch (SQLException e2){
+                System.out.println("Error running the sample queries.  Machine Error: " +
+                                   Ex.toString());
+            }
         } finally{
             try {
                 if (statement != null)
@@ -341,7 +354,7 @@ public class jdbcTransactionThread extends Thread {
             
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
-            System.out.println("\nTransaction 3 " + "for thread " + m_id +" started successfully.\n");
+            System.out.println("Transaction 3 " + "for thread " + m_id +" started successfully.");
             
             String checkOrder = "Select id from orders where warehouse_id = 1 and " +
             "distributor_id = " + distribution_station + " and custID = " + custID +
@@ -387,8 +400,14 @@ public class jdbcTransactionThread extends Thread {
             System.out.println("\nTransaction 3 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex) {
-            System.out.println("Error running the sample queries.  Machine Error: " +
-                               Ex.toString());
+            try{
+                connection.rollback();
+                System.out.println("Transaction 3 " + "for thread " + m_id +" roll back.");
+            }
+            catch (SQLException e2){
+                System.out.println("Error running the sample queries.  Machine Error: " +
+                                   Ex.toString());
+            }
         } finally{
             try {
                 if (statement != null)
@@ -421,7 +440,7 @@ public class jdbcTransactionThread extends Thread {
             //String startTransaction = "SET TRANSACTION READ WRITE";
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
-            System.out.println("\nTransaction 4 " + "for thread " + m_id +" started successfully.\n");
+            System.out.println("Transaction 4 " + "for thread " + m_id +" started successfully.");
             
             //Set up discount array for customers.
             String totalCustomers = "Select count(*) from customers";
@@ -555,7 +574,14 @@ public class jdbcTransactionThread extends Thread {
             System.out.println("\nTransaction 4 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex){
-            System.out.println("Error running the sample queries. Machine Error: " + Ex.toString());
+            try{
+                connection.rollback();
+                System.out.println("Transaction 4 " + "for thread " + m_id +" roll back.");
+            }
+            catch (SQLException e2){
+                System.out.println("Error running the sample queries.  Machine Error: " +
+                                   Ex.toString());
+            }
         } finally{
             try{
                 if(statement != null){
@@ -595,7 +621,7 @@ public class jdbcTransactionThread extends Thread {
             //statement.executeUpdate(startTransaction);
             
             //The 20 most recent orders for the distribution station
-            System.out.println("\nTransaction 5 " + "for thread " + m_id +" started successfully.\n");
+            System.out.println("Transaction 5 " + "for thread " + m_id +" started successfully.");
             String lastTwentyOrders = "Select * from (Select order_date, custID, id from orders where warehouse_id = " +
             warehouse_id + " and distributor_id = " + distribution_station +
             " order by order_date desc) sortedDate where rownum < 21";
@@ -674,8 +700,14 @@ public class jdbcTransactionThread extends Thread {
             System.out.println("\nTransaction 5 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex) {
-            System.out.println("Error running the sample queries.  Machine Error: " +
-                               Ex.toString());
+            try{
+                connection.rollback();
+                System.out.println("Transaction 5 " + "for thread " + m_id +" roll back.");
+            }
+            catch (SQLException e2){
+                System.out.println("Error running the sample queries.  Machine Error: " +
+                                   Ex.toString());
+            }
         } finally{
             try {
                 if (statement != null)
