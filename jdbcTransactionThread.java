@@ -539,15 +539,11 @@ public class jdbcTransactionThread extends Thread {
                     //System.out.println("Customer Discount = " + discounts[distributorID][custID] + "%");
                     //System.out.println("Total w/ Discount = " + Math.round(100.0*((1.0-discounts[distributorID][custID]/100.0)*price))/100.0 + "\n");
                     
-<<<<<<< HEAD
-                    double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
-                    System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
-=======
+                    //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     double lineItemTotal = price;
+                    System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
-                    
->>>>>>> b7be2c46e59fd96d94ec2507f54dff0b263ef97f
                     //Make sure it's in stock.
                     String checkInStock = "select quantity_in_stock from warehouse_stock where warehouse_id = " + warehouseID + " and item_id = " + itemID;
                     resultSet3 = statement3.executeQuery(checkInStock);
@@ -783,10 +779,8 @@ public class jdbcTransactionThread extends Thread {
             connection = DriverManager.getConnection(url, username, password);
             
             //thread
-<<<<<<< HEAD
-=======
+            
             lock = new ReentrantLock();
->>>>>>> b7be2c46e59fd96d94ec2507f54dff0b263ef97f
             
             Thread[] threadList = new Thread[NUM_OF_THREADS];
             for (int i = 0; i < NUM_OF_THREADS; i++){
@@ -796,13 +790,7 @@ public class jdbcTransactionThread extends Thread {
             for (int i = 0; i < NUM_OF_THREADS; i++){
                 threadList[i].join();
             }
-<<<<<<< HEAD
-             
-             
-=======
             
-            
->>>>>>> b7be2c46e59fd96d94ec2507f54dff0b263ef97f
         }
         catch(Exception Ex)  {
             System.out.println("Error connecting to database.  Machine Error: " +
