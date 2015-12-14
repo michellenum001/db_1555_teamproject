@@ -67,15 +67,18 @@ public class GroceryDelivery{
     public void updateAggregateField(){
         try{
             statement = connection.createStatement();
-            String lineItemsOfOrder = "select warehouse_id, distributor_id, custID, item_id, quantity, price from lineItems";
+            String lineItemsOfOrder = "select * from lineItems";
             resultSet = statement.executeQuery(lineItemsOfOrder);
+            int count = 0;
             while(resultSet.next()){
+                count++;
+                System.out.println("lineItem count: " + count);
                 int warehouse_id = resultSet.getInt(1);
                 int distributor_id = resultSet.getInt(2);
                 int cust_id = resultSet.getInt(3);
-                int item_id = resultSet.getInt(4);
-                int quantity = resultSet.getInt(5);
-                double price = resultSet.getInt(6);
+                int item_id = resultSet.getInt(6);
+                int quantity = resultSet.getInt(7);
+                double price = resultSet.getDouble(8);
                 String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
                 price + "where id = 1";
                 statement.executeUpdate(updateWarehouse);
@@ -272,7 +275,8 @@ public class GroceryDelivery{
                 
                 // So that we don't run out of stock, we set in stock to what is ordered
                 // and then some random amount extra
-                int inStock = quantityOrderedPerItem[item_id] + r.nextInt(200);
+                //int inStock = quantityOrderedPerItem[item_id] + r.nextInt(200);
+                int inStock = r.nextInt(200);
                 
                 int sold = 0;
                 int orders = 0;
@@ -291,9 +295,9 @@ public class GroceryDelivery{
             System.out.println("Inserted " + numberItems + " tuples into the warehouse_stock table.");
             
             //To update the corresponding aggregate fields when data generation is finished.
-            updateAggregateField();
             
             statement.executeUpdate("COMMIT");
+            updateAggregateField();
             System.out.println("Transaction committed.\n");
             
         } catch(SQLException Ex) {

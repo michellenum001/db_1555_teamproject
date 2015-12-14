@@ -181,7 +181,15 @@ public class jdbcTransactionThread extends Thread {
                 item_price + "where id = 1";
                 
                 sqlStatements.add(updateWarehouse);
-
+                
+                
+                String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quantity + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                sqlStatements.add(updateStockSold);
+                //System.out.println("Increased quantity of sold for this item in warehouse by " + quan);
+                
+                String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1" + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
+                sqlStatements.add(updateStockOrder);
+                //System.out.println("Increased number of orders for this item in warehouse by 1.");
             }
             
             // Now that we are done with user input and getting the order info,
@@ -535,14 +543,6 @@ public class jdbcTransactionThread extends Thread {
                         statement3.executeUpdate(updateStockQuantity);
                         //System.out.println("Decreased stock of this item in warehouse by " + quan);
                         
-                        String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quan + " where warehouse_id = " + warehouseID + " and item_id = " + itemID;
-                        statement3.executeUpdate(updateStockSold);
-                        //System.out.println("Increased quantity of sold for this item in warehouse by " + quan);
-                        
-                        String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1" + " where warehouse_id = " + warehouseID + " and item_id = " + itemID;
-                        statement3.executeUpdate(updateStockOrder);
-                        //System.out.println("Increased number of orders for this item in warehouse by 1.");
-                        
                         String setDelivered = "update LineItems set date_delivered = " + "SYSDATE" +
                         " where warehouse_id = " + warehouse_id + " and distributor_id = " + distributorID +
                         " and custID = " + custID + " and order_id = " + orderID + " and id = " + lineItemID;
@@ -745,9 +745,7 @@ public class jdbcTransactionThread extends Thread {
             
             //create a connection to DB on class3.cs.pitt.edu
             connection = DriverManager.getConnection(url, username, password);
-            //connection.setAutoCommit(false);
-            //GroceryDelivery test = new GroceryDeliveryThread();
-            //grocery = new GroceryDelivery();
+            /*
             //thread
             Thread[] threadList = new Thread[NUM_OF_THREADS];
             for (int i = 0; i < NUM_OF_THREADS; i++){
@@ -757,6 +755,7 @@ public class jdbcTransactionThread extends Thread {
             for (int i = 0; i < NUM_OF_THREADS; i++){
                 threadList[i].join();
             }
+             */
         }
         catch(Exception Ex)  {
             System.out.println("Error connecting to database.  Machine Error: " +
