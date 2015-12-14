@@ -6,9 +6,9 @@ import java.util.*;
 public class GroceryDelivery{
     
     private Connection connection;
-    private Statement statement;
+    private Statement statement, statement2;
     private PreparedStatement preparedStatement;
-    private ResultSet resultSet;
+    private ResultSet resultSet, resultSet2;
     
     private int numberWarehouses, numberDistribution, numberCustomers;
     private int numberItems, maxOrdersPerCustomer, minLineItemsPerOrder;
@@ -67,30 +67,32 @@ public class GroceryDelivery{
     public void updateAggregateField(){
         try{
             statement = connection.createStatement();
+            statement2 = connection.createStatement();
             String lineItemsOfOrder = "select * from lineItems";
-            resultSet = statement.executeQuery(lineItemsOfOrder);
+            resultSet2 = statement.executeQuery(lineItemsOfOrder);
             int count = 0;
-            while(resultSet.next()){
+            while(resultSet2.next()){
                 count++;
                 System.out.println("lineItem count: " + count);
-                int warehouse_id = resultSet.getInt(1);
-                int distributor_id = resultSet.getInt(2);
-                int cust_id = resultSet.getInt(3);
-                int item_id = resultSet.getInt(6);
-                int quantity = resultSet.getInt(7);
-                double price = resultSet.getDouble(8);
+                int warehouse_id = resultSet2.getInt(1);
+                int distributor_id = resultSet2.getInt(2);
+                int cust_id = resultSet2.getInt(3);
+                int item_id = resultSet2.getInt(6);
+                int quantity = resultSet2.getInt(7);
+                double price = resultSet2.getDouble(8);
+                //System.out.println("Testing: " + warehouse_id + "/" + distributor_id + "/" + cust_id + "/" + item_id);
                 String updateWarehouse = "Update warehouses set sales_sum = sales_sum + " +
                 price + "where id = 1";
-                statement.executeUpdate(updateWarehouse);
+                statement2.executeUpdate(updateWarehouse);
                 String updateDistribution = "Update distribution_station set sales_sum = sales_sum + " +
                 price + "where warehouse_id = 1 and " + "id = " + distributor_id;
-                statement.executeUpdate(updateDistribution);
+                statement2.executeUpdate(updateDistribution);
                 String updateCustomer = "update customers set outstanding_balance = outstanding_balance + " + price + " where warehouse_id = 1 and " + "distributor_id = " + distributor_id + " and id = " + cust_id;
-                statement.executeUpdate(updateCustomer);
+                statement2.executeUpdate(updateCustomer);
                 String updateStockSold = "update warehouse_stock set quantity_sold = quantity_sold + " + quantity + " where warehouse_id = " + warehouse_id + " and item_id = " + item_id;
-                statement.executeUpdate(updateStockSold);
+                statement2.executeUpdate(updateStockSold);
                 String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1 " + "where warehouse_id = 1 " + "and item_id = " + item_id;
-                statement.executeUpdate(updateStockOrder);
+                statement2.executeUpdate(updateStockOrder);
             }
         }
         catch (SQLException Ex){
