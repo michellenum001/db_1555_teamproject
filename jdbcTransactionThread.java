@@ -469,7 +469,7 @@ public class jdbcTransactionThread extends Thread {
            
             statement = connection.createStatement();
             // Now that we are done collecting user input, we can start the transaction
-            lock.lock();
+           
             //String startTransaction = "SET TRANSACTION READ WRITE";
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
@@ -496,6 +496,13 @@ public class jdbcTransactionThread extends Thread {
             //Obtain the order info for incomplete orders
             String findOrders = "select warehouse_id, distributor_id, custID, id from orders where completed = 0";
             resultSet = statement.executeQuery(findOrders);
+            
+            // We lock here because we check the quantity in stock for the items, and
+            // only deliver if it is in sufficient stock.
+            // So we lock here to make sure we can't go below 0, and release at commit
+            // because that is when the changes are made in the warehouse stock.
+            
+            lock.lock();
             while (resultSet.next()) {
                 
                 int warehouseID = resultSet.getInt(1);
@@ -521,6 +528,7 @@ public class jdbcTransactionThread extends Thread {
                 //System.out.println(lineItemsOfOrder);
                 
                 resultSet2 = statement2.executeQuery(lineItemsOfOrder);
+                
                 while (resultSet2.next()) {
                     int lineItemID = resultSet2.getInt(1);
                     int itemID = resultSet2.getInt(2);
@@ -543,6 +551,7 @@ public class jdbcTransactionThread extends Thread {
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     
+                  
                     //Make sure it's in stock.
                     String checkInStock = "select quantity_in_stock from warehouse_stock where warehouse_id = " + warehouseID + " and item_id = " + itemID;
                     resultSet3 = statement3.executeQuery(checkInStock);
@@ -601,7 +610,10 @@ public class jdbcTransactionThread extends Thread {
             
             //statement.executeUpdate("COMMIT");
             connection.commit();
-         	 lock.unlock();
+            
+            //Changes are made to warehouse stock, so now we can release the lock. 
+         	lock.unlock();
+         	
             System.out.println("\nTransaction 4 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex){
