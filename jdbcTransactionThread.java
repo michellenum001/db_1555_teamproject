@@ -469,7 +469,7 @@ public class jdbcTransactionThread extends Thread {
            
             statement = connection.createStatement();
             // Now that we are done collecting user input, we can start the transaction
-            lock.lock();
+            
             //String startTransaction = "SET TRANSACTION READ WRITE";
             //statement = connection.createStatement();
             //statement.executeUpdate(startTransaction);
@@ -496,6 +496,12 @@ public class jdbcTransactionThread extends Thread {
             //Obtain the order info for incomplete orders
             String findOrders = "select warehouse_id, distributor_id, custID, id from orders where completed = 0";
             resultSet = statement.executeQuery(findOrders);
+            
+            // We check quantity stocks, so we place a lock to make sure two threads
+            // won't both check for sufficient stock, and deliver more items than we have in stock.
+            // So this avoids a negative quantity_in_stock after the deliveries. 
+            lock.lock();
+            
             while (resultSet.next()) {
                 
                 int warehouseID = resultSet.getInt(1);
@@ -602,7 +608,10 @@ public class jdbcTransactionThread extends Thread {
             
             //statement.executeUpdate("COMMIT");
             connection.commit();
-         	 lock.unlock();
+            // Now that we have committed, we have updated the quantity_in_stock, so 
+            // we can now unlock and allow another thread to do these operations.
+         	lock.unlock();
+         	 
             System.out.println("\nTransaction 4 " + "for thread " + m_id +" committed.\n");
             
         } catch(SQLException Ex){
