@@ -125,11 +125,11 @@ public class GroceryDelivery{
         {
             //Scanner scan = new Scanner(System.in);
             numberWarehouses = 1;
-            numberDistribution = 5;
-            numberCustomers = 50;
-            numberItems = 100;
-            maxOrdersPerCustomer = 10;
-            minLineItemsPerOrder = 5;
+            numberDistribution = 8;
+            numberCustomers = 100;
+            numberItems = 1000;
+            maxOrdersPerCustomer = 50;
+            minLineItemsPerOrder = 3;
             maxLineItemsPerOrder = 10;
             //double warehouseSale  = 0;
             System.out.println("There is one warehouse.");
