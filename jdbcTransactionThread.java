@@ -480,16 +480,7 @@ public class jdbcTransactionThread extends Thread {
             String totalCustomers = "Select count(*) from customers";
             resultSet = statement.executeQuery(totalCustomers);
             resultSet.next();
-            double[][] discounts = new double [grocery.getNumDistribution()+1][grocery.getNumCustomer()+1];
-            
-            //Fill in discount array for customers
-            String findDiscounts = "Select distributor_id, id, discount from customers";
-            resultSet = statement.executeQuery(findDiscounts);
-            int count_customer = 1;
-            while (resultSet.next()) {
-                discounts[resultSet.getInt(1)][resultSet.getInt(2)] = Math.round(resultSet.getDouble(3)*100.0)/100.0;
-            }
-            
+           
             Statement statement2 = connection.createStatement();
             Statement statement3 = connection.createStatement();
             
@@ -547,7 +538,7 @@ public class jdbcTransactionThread extends Thread {
                     
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     double lineItemTotal = price;
-                    System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
+                    //System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //Make sure it's in stock.
@@ -794,6 +785,7 @@ public class jdbcTransactionThread extends Thread {
             Thread[] threadList = new Thread[NUM_OF_THREADS];
             for (int i = 0; i < NUM_OF_THREADS; i++){
                 threadList[i] = new jdbcTransactionThread(i/3);
+                System.out.println("Starting thread + " + i);
                 threadList[i].start();
             }
             for (int i = 0; i < NUM_OF_THREADS; i++){

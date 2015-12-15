@@ -67,6 +67,7 @@ public class GroceryDelivery{
     
     public void updateAggregateField(){
         try{
+        	System.out.println("Aggregate field time.");
             String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement2 = connection.createStatement();
@@ -100,6 +101,7 @@ public class GroceryDelivery{
                 statement2.executeUpdate(updateStockOrder);
             }
             statement.executeUpdate("COMMIT");
+            System.out.println("Committed aggregate field");
         }
         catch (SQLException Ex){
             System.out.println("Error running the queries.  Machine Error: " +
@@ -122,11 +124,11 @@ public class GroceryDelivery{
         {
             //Scanner scan = new Scanner(System.in);
             numberWarehouses = 1;
-            numberDistribution = 8;
-            numberCustomers = 100;
-            numberItems = 1000;
-            maxOrdersPerCustomer = 50;
-            minLineItemsPerOrder = 3;
+            numberDistribution = 5;
+            numberCustomers = 50;
+            numberItems = 100;
+            maxOrdersPerCustomer = 10;
+            minLineItemsPerOrder = 5;
             maxLineItemsPerOrder = 10;
             //double warehouseSale  = 0;
             System.out.println("There is one warehouse.");
