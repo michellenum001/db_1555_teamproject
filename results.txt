@@ -1,0 +1,34 @@
+Time results:
+
+Round #1:
+real: 44m44.688s
+
+Round #2:
+real: 50m29.304s
+
+Round #3:
+real: 47m13.960s
+
+Round #4:
+real: 48m21.192s
+
+Round #5:
+real: 51m49.743s
+
+Round #6:
+real: 46m25.910s
+
+Round #7:
+real: 49m6.157s
+
+Round #8:
+real: 50m4.601s
+
+Round #9:
+real: 47m55.858s
+
+Round #10:
+real: 50m6.791s
+
+Average:
+real: 48m39.62s
