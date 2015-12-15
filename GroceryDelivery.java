@@ -108,16 +108,6 @@ public class GroceryDelivery{
             System.out.println("Error running the queries.  Machine Error: " +
                                Ex.toString());
         }
-        finally{
-            try {
-                if (statement != null)
-                    statement.close();
-                if (preparedStatement != null)
-                    preparedStatement.close();
-            } catch (SQLException e) {
-                System.out.println("Cannot close Statement. Machine error: "+e.toString());
-            }
-        }
     }
     
     public void populateTables(){
@@ -133,11 +123,11 @@ public class GroceryDelivery{
             maxLineItemsPerOrder = 10;
             //double warehouseSale  = 0;
             System.out.println("There is one warehouse.");
-            System.out.println("There are three distribution stations.");
-            System.out.println("There are 10 customers per distribution station.");
-            System.out.println("There are a total of 100 items.");
-            System.out.println("There are at most 5 orders for each customer.");
-            System.out.println("There are at least 3 items for each order and there are at most 7 items for each order.");
+            System.out.println("There are eight distribution stations.");
+            System.out.println("There are 100 customers per distribution station.");
+            System.out.println("There are a total of 1000 items.");
+            System.out.println("There are at most 50 orders for each customer.");
+            System.out.println("There are at least 3 items for each order and there are at most 10 items for each order.");
             ArrayList<Double> distributorSale = new ArrayList<Double>();
             for (int i=0;i<numberDistribution;i++){
                 distributorSale.add(0.0);
