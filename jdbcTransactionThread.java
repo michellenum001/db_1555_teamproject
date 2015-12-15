@@ -287,6 +287,7 @@ public class jdbcTransactionThread extends Thread {
                     System.out.println("Outstanding balance is 0, thus no payments need be applied. Ending transaction and returning now.");
                     //statement.executeUpdate("COMMIT");
                     connection.commit();
+                    System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
                     return;
                 }
                 
@@ -305,6 +306,7 @@ public class jdbcTransactionThread extends Thread {
                 //System.out.println("No record for this customer. Ending transaction and returning.");
                 //statement.executeUpdate("COMMIT");
                 connection.commit();
+                System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
                 return;
             }
             
@@ -547,7 +549,7 @@ public class jdbcTransactionThread extends Thread {
                     
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     double lineItemTotal = price;
-                    System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
+                    //System.out.println("price is: " + price + " and discount price is: " + lineItemTotal);
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //double lineItemTotal = Math.round(100.0*(1.0-discounts[distributorID][custID]/100.0)*price)/100.0;
                     //Make sure it's in stock.

@@ -26,7 +26,7 @@ public class GroceryDelivery{
             connection.setAutoCommit(false);
             createTables();
             populateTables();
-            updateAggregateField();
+            //updateAggregateField();
         }
         catch(SQLException Ex){
             System.out.println("Error connecting to database. Machine Error: " + Ex.toString());
@@ -67,7 +67,7 @@ public class GroceryDelivery{
     
     public void updateAggregateField(){
         try{
-            String startTransaction = "SET TRANSACTION READ WRITE";
+            //String startTransaction = "SET TRANSACTION READ WRITE";
             statement = connection.createStatement();
             statement2 = connection.createStatement();
             String lineItemsOfOrder = "select * from lineItems";
@@ -99,7 +99,7 @@ public class GroceryDelivery{
                 String updateStockOrder = "update warehouse_stock set number_orders = number_orders + 1 " + "where warehouse_id = 1 " + "and item_id = " + item_id;
                 statement2.executeUpdate(updateStockOrder);
             }
-            statement.executeUpdate("COMMIT");
+            //statement.executeUpdate("COMMIT");
         }
         catch (SQLException Ex){
             System.out.println("Error running the queries.  Machine Error: " +
@@ -319,7 +319,7 @@ public class GroceryDelivery{
             System.out.println("Inserted " + numberItems + " tuples into the warehouse_stock table.");
             
             //To update the corresponding aggregate fields when data generation is finished.
-            
+            updateAggregateField();
             statement.executeUpdate("COMMIT");
             //updateAggregateField();
             System.out.println("Transaction committed.\n");
