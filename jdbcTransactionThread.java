@@ -301,6 +301,30 @@ public class jdbcTransactionThread extends Thread {
                     
                     paymentAmt = outstanding_balance;
                 }
+                ArrayList <String> sqlStatements = new ArrayList <String> ();
+                
+                String updateCustomer = "Update customers set outstanding_balance = " +
+                "outstanding_balance - " + paymentAmt + " where warehouse_id = 1 and " +
+                "distributor_id = " + distribution_station + " and id = " + custID;
+                
+                System.out.println(updateCustomer);
+                
+                statement.executeUpdate(updateCustomer);
+                
+                //System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
+                
+                String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
+                statement.executeUpdate(updateYearSpent);
+                System.out.println(updateYearSpent + "\n");
+                
+                //System.out.println("Added " + paymentAmt + " towards the year spend amount in the customers table.");
+                
+                //System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");
+                
+                //statement.executeUpdate("COMMIT");
+                connection.commit();
+                System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
+                
             }
             else {
                 //System.out.println("No record for this customer. Ending transaction and returning.");
@@ -309,33 +333,7 @@ public class jdbcTransactionThread extends Thread {
                 System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
                 return;
             }
-            
-            
-            //Can start transaction now that we have finished taking user input.
-            
-            ArrayList <String> sqlStatements = new ArrayList <String> ();
-            
-            String updateCustomer = "Update customers set outstanding_balance = " +
-            "outstanding_balance - " + paymentAmt + " where warehouse_id = 1 and " +
-            "distributor_id = " + distribution_station + " and id = " + custID;
-        
-        	System.out.println(updateCustomer);
-        
-            statement.executeUpdate(updateCustomer);
-            
-            //System.out.println("\nPaid " + paymentAmt + " towards the outstanding balance in the customers table.");
-            
-            String updateYearSpent = "update customers set year_spend = year_spend + " + paymentAmt + " where warehouse_id = 1 and " + "distributor_id = " + distribution_station + " and id = " + custID;
-            statement.executeUpdate(updateYearSpent);
-            System.out.println(updateYearSpent + "\n");
-            
-            //System.out.println("Added " + paymentAmt + " towards the year spend amount in the customers table.");
-            
-            //System.out.println("Added " + paymentAmt + " towards the sales sum of warehouse #1.\n");
-            
-            //statement.executeUpdate("COMMIT");
-            connection.commit();
-            System.out.println("\nTransaction 2 " + "for thread " + m_id +" committed.\n");
+
             
         } catch(SQLException Ex) {
             try{
